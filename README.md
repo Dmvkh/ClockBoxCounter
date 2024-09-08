@@ -36,7 +36,7 @@ Used as Master Controller. Interacts with web-server and controls user interface
 * Randomly blocks virtual COM port after several flashes until PC is rebooted
 * Requires special CH341 chip driver to support USB communication
   
-#### - AH-TINY Attiny 88.
+#### - MH-TINY Attiny 88.
 <img src="./Images/Attiny.png" width="200" />
 
 Used as Slave Controller. Controls music and independent LEDs blinking.
