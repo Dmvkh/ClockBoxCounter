@@ -11,7 +11,7 @@ Secondary controller (Attiny board) does async LED blinking, buzz sounds and rea
 #### - Wemos D1 mini.
 <img src="./Images/Wemos.png" width="200" />
 
-Used as Master Controller.
+Used as Master Controller. Interacts with web-server and controls user interface.
 
 **Pros**
 
@@ -33,7 +33,7 @@ Used as Master Controller.
 #### - AH-TINY Attiny 88.
 <img src="./Images/Attiny.png" width="200" />
 
-Used as Slave Controller.
+Used as Slave Controller. Controls music and independent LEDs blinking.
 
 **Pros**
 
@@ -50,8 +50,35 @@ Used as Slave Controller.
 
 ### B) Arduino components:
 
-#### SSD1306 I2C OLED Display.
+#### SSD1306 I2C OLED Display
 <img src="./Images/SSD1306.png" width="200" />
 
 Used for short pop-up messages and progress bar visualisation.
 
+#### 2004A I2C LCD 20 x 4 rows LCD Display
+<img src="./Images/LCD2004A.png" width="200" />
+
+Used for user menu and displaying text messages.
+
+#### KY-040 Encoder
+<img src="./Images/KY-040.png" width="200" />
+
+Used for user iteraction with menu interface.
+
+#### TM1637 4-digit 7-Segment LED Display (1x Clock-Type, 1x Decimal point type)
+<img src="./Images/TM1637.png" width="400" />
+
+Used for displaying clock in stand-by mode, and selected task progress in user-interaction mode.
+
+#### RF 433 MHz Transmitter / Receiver modules
+<img src="./Images/RF-433.png" width="200" />
+
+Used for programming and reading pressed buttons of user remotes (for individual tasks display for each user).
+
+#### User Remotes
+<img src="./Images/Remote.png" width="200" />
+
+Programmable 433MHz remote used as individual console to interact with ClockBoxCounter.
+
+#### Various small parts for Arduino
+Push-up buttons, ultra-bright 3mm LEDs, breadboard, electronic components (diodes, resistors, capacitors, mosfet) for wiring circuit.
