@@ -106,6 +106,7 @@ Push-up buttons, ultra-bright 3mm LEDs, breadboard, electronic components (diode
 #### - Hull Design
 - [x] 3D model prototype fitting
 - [x] Create case STL 3D model
+- [ ] Add images with user-friendly wiring scheme **TODO**
 
 ### - Software progress
 
