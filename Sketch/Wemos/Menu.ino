@@ -229,14 +229,14 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
         
                   for (int i = 0; i < consoleButtons; ++i)
                   {
-                      memcpy(options[i], consoleUsers[selectedItem], min(sizeof(consoleUsers[selectedItem]), size_t(6)));
+                      memcpy(options[i], consoleUsers[selectedItem], min(sizeof(consoleUsers[selectedItem]), sizeof(consoleUsers[selectedItem])));
                       strcat(options[i], " ");
                       strcat(options[i], " -> Button ");
                       
                       char bnum[3];
                       itoa(i, bnum, 10);
                       char bcpy[3];
-                      memcpy(bcpy, bnum, min(sizeof(bnum), size_t(17 - sizeof(options[i]))));
+                      memcpy(bcpy, bnum, min(sizeof(bnum), 17 - sizeof(options[i])));
 
                       if (sizeof(bcpy) > 0)
                       {
