@@ -6,6 +6,9 @@
 This device designed with 2 independent controllers in mind. Main controller (Wemos board) does Wi-Fi connections to maintain web-server API interactions and processes user actions.
 Secondary controller (Attiny board) does async LED blinking, buzz sounds and reads some button inputs, without stuttering main board.
 
+## Web Service:
+ - Small LAN web-server running on Raspberry Pi computer, contating SQLite DB for containing existing user Tasks/Chores progresses and providing simple API interface for adding/updating users tasks.
+
 ## Used Electrical Parts:
 
 ### A) Controller Boards:
@@ -83,4 +86,67 @@ Used for programming and reading pressed buttons of user remotes (for individual
 Programmable 433MHz remote used as individual console to interact with ClockBoxCounter.
 
 #### Various small parts for Arduino
+
 Push-up buttons, ultra-bright 3mm LEDs, breadboard, electronic components (diodes, resistors, capacitors, mosfet) for wiring circuit.
+
+## Inner Wiring Scheme:
+
+<img src="./Images/Internals.png" width="800" />
+
+## Project progress:
+
+### - Hardware progress
+
+#### - Electronic
+- [x] Schematic design
+- [x] Components prototyping
+- [x] Soldering circuit
+
+#### - Hull Design
+- [x] 3D model prototype fitting
+- [x] Create case STL 3D model
+
+### - Software progress
+
+#### - Attiny
+- [x] Implement music (via buzzer)
+
+  * Due to limited Attiny memory, async music play produced various crashes, hangs and memory overflows. Eventually I did it completely synchronous, which means that Attiny cannot blink or read pin signals until current melody is completed. Thus all melodies made as short as possible.
+    
+- [x] Implement LED blinking schemes
+  - [x] Police blinking
+  - [x] Individual LED blinking
+- [x] Implement interactions with Master board
+  
+  * I hadn't been able to make I2C interation between Wemos and Attiny work (though, Wemos-Arduino Nano worked perfectly). Eventually, I changed I2C to Serial communication via SoftwareSerial on Attiny part (which severely limited available memory on Attiny board). Due to many componnents used in the circuit, UART communication may suffer from inducted noise. To mitigate that issue I experimented with baud rates and read delays and eventually implemented simple command checksum verification for communication protocol.
+    
+  - [x] Implement checksum verification to ensure proper command execution
+- [x] Read push buttons and send signals to Master board
+
+#### - Wemos
+- [x] Implement Standby mode
+- [x] Add Wi-Fi connection for internet and intranet data updates
+- [x] Show clock in Standby mode
+  - [x] Add clock sync with internet UTC service
+- [x] Implement Attiny serial communication
+  - [x] Add Attiny ping function to ensure that Slave board is online
+- [ ] Add user menu interface **IN PROGRESS**
+  - [x] Add placeholder screen for Standby mode (when backlight is off)
+  - [x] Add menu interruption and resuming functions to show temporary messages
+  - [ ] Create Demo in Settings menu  **TODO**
+- [x] Add LCD display text printing routine
+- [x] Add OLED display text printing routine
+  - [x] Add auto closing pop-up messages
+  - [x] Add progress bar for long running processes  
+- [ ] Add user tasks dowloading via web-server API **IN PROGRESS**
+   - [x] Add new tasks counter indicator in Standby mode
+   - [x] Add task signals manifestatation (blinking/sounds) in Standby mode
+   - [ ] Add new tasks download from Web-server API **TODO**
+- [ ] Implement RF 433 MHz protocol communication **IN PROGRESS**
+  - [x] Add RF reading for detecting users and distinguish remote buttons pressed
+  - [x] Add generating and transmitting RF signal for choosen user via Menu for remote programming
+  - [ ] Add interaction with downloaded tasks via RF remote **TODO**
+
+#### - LAN web server API
+- [ ] Add Web-Server API for individual user tasks **TODO**
+  - [ ] Add tasks create/update interface for individual users **TODO**
