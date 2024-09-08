@@ -192,6 +192,9 @@ void SendSerialCommand(char command_id, char* command_data, byte dataLen)
             {
                 Serial.println("Attiny responded with a wrong checksum: '" + String(receivedCheckSum) + "'; Expected: '" + String(checksum) + "'!");
             }
+
+            // Clear serial buffer
+            Serial.flush();
         }
     }
 
