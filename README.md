@@ -1,6 +1,8 @@
 # ClockBoxCounter
 'Arduino' based device which helps kids track scheduled tasks and chores progresses.
 
+<img src="./Images/Box0.png" width="800" />
+
 This device designed with 2 independent controllers in mind. Main controller (Wemos board) does Wi-Fi connections to maintain web-server API interactions and processes user actions.
 Secondary controller (Attiny board) does async LED blinking, buzz sounds and reads some button inputs, without stuttering main board.
 
