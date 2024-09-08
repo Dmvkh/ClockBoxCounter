@@ -7,7 +7,8 @@ This device designed with 2 independent controllers in mind. Main controller (We
 Secondary controller (Attiny board) does async LED blinking, buzz sounds and reads some button inputs, without stuttering main board.
 
 ## Web Service:
- - Small LAN web-server running on Raspberry Pi computer, contating SQLite DB for containing existing user Tasks/Chores progresses and providing simple API interface for adding/updating users tasks.
+ - Small LAN web-server @'Raspberry Pi'-like computer (Libre Computer Renegade), running Debian with Python-Dash (Flask) service and SQLite DB for containing existing user Tasks/Chores progresses and providing simple API interface for adding/updating users tasks.
+<img src="./Images/Renegade.png" width="400" />
 
 ## Used Electrical Parts:
 
