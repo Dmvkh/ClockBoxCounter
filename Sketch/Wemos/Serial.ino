@@ -81,8 +81,14 @@ void ListenSerial()
                   
                   break;
             }
-      }
-   }
+        }
+        
+        // Clear serial buffer
+        while (Serial.available() > 0) 
+        {
+           Serial.read();
+        }
+    }
 }
 
 void SetBlinking(byte blink_mode, int blinkSpeed)
@@ -193,8 +199,11 @@ void SendSerialCommand(char command_id, char* command_data, byte dataLen)
                 Serial.println("Attiny responded with a wrong checksum: '" + String(receivedCheckSum) + "'; Expected: '" + String(checksum) + "'!");
             }
 
-            // Clear serial buffer
-            Serial.flush();
+            // Clear buffer leftover
+            while (Serial.available() >0 ) 
+            {
+               Serial.read();
+            }
         }
     }
 

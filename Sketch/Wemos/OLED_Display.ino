@@ -53,7 +53,7 @@ void OLED_PrintText(String text, byte textSize, byte brightness, byte eraseAfter
 
         // Do center printed text
         oled.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
-        oled.setCursor((SCREEN_WIDTH - w) / 2, (SCREEN_HEIGHT - h) / 2);
+        oled.setCursor((OLED_SCREEN_WIDTH - w) / 2, (OLED_SCREEN_HEIGHT - h) / 2);
          
         oled.print(text);
     }

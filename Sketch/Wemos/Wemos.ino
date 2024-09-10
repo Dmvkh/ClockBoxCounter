@@ -13,9 +13,12 @@
 // This file contains defines of sensitive credentials (marked with 'defined elsewhere' comment)
 #include "Credentials.h"
 
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 32 // OLED display height, in pixels
-#define OLED_ADDR   0x3C
+#define OLED_SCREEN_WIDTH 128 // OLED display width, in pixels
+#define OLED_SCREEN_HEIGHT 32 // OLED display height, in pixels
+#define OLED_ADDR 0x3C
+
+#define LCD_SCREEN_WIDTH 20 // OLED display width, in pixels
+#define LCD_SCREEN_HEIGHT 4 // OLED display height, in pixels
 
 const byte wheel_press = A0;
 
@@ -31,7 +34,7 @@ WiFiUDP ntpUDP;
 WiFiClient client;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 
-Adafruit_SSD1306 oled(SCREEN_WIDTH, SCREEN_HEIGHT);
+Adafruit_SSD1306 oled(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT);
 
 TM1637 counter_clock(D0, D4);
 TM1637 counter_number(D0, D3);
