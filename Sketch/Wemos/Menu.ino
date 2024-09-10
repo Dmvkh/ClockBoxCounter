@@ -11,7 +11,7 @@ const byte usersTotal = 4;
 const char* consoleUsers[usersTotal] = { "Dad", "Max", "Fox", "Mom", };
 const byte consoleButtons = 4;
 
-char options[255][18];
+char options[255][18] = {};
 
 byte interruptRestoreTimeoutSecs = 30;
 
@@ -229,22 +229,18 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
         
                   for (int i = 0; i < consoleButtons; ++i)
                   {
-                      memcpy(options[i], consoleUsers[selectedItem], min(sizeof(consoleUsers[selectedItem]), sizeof(consoleUsers[selectedItem])));
+                      memcpy(options[i], consoleUsers[selectedItem], min(strlen(consoleUsers[selectedItem]), size_t(LCD_SCREEN_WIDTH - 12)));
                       strcat(options[i], " ");
                       strcat(options[i], " -> Button ");
-                      
-                      char bnum[3];
-                      itoa(i, bnum, 10);
-                      char bcpy[3];
-                      memcpy(bcpy, bnum, min(sizeof(bnum), 17 - sizeof(options[i])));
 
-                      if (sizeof(bcpy) > 0)
+                      byte optLen = strlen(consoleUsers[selectedItem]) + 12;
+
+                      char ichar[3] = {};
+                      itoa(i, ichar, 10);
+                      for (byte k = 0; k < LCD_SCREEN_WIDTH - optLen; ++k)
                       {
-                          strcat(options[i], bnum);
+                          options[i][optLen + k] = ichar[k];
                       }
-
-                      // Null-terminate last element of char array
-                      options[i][strlen(options[i]) + 1] = '\0';
                   }
         
                   break;
@@ -358,7 +354,7 @@ void DrawMenuOptions(byte optionsSize, byte activeItem)
         iStart--;
     }
   
-    for (byte i = 0; i < 4; ++i)
+    for (byte i = 0; i < LCD_SCREEN_HEIGHT; ++i)
     {
         byte item_no = i + iStart;
     

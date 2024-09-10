@@ -61,6 +61,12 @@ void ReadSerial()
             // Now Execute command
             ExecuteCommand(command_id, dataLen, commandData);
         }
+
+        // Clear buffer leftover
+        while (portOne.available() >0 ) 
+        {
+           portOne.read();
+        }
     }    
 }
 
