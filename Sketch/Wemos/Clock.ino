@@ -19,9 +19,10 @@ void ShowClock(long currentMillis)
     {
         int clockNum = clockMins + clockHour * 100;
         char clockData[4];
-        sprintf(clockData, "%000i", clockNum);
+        sprintf(clockData, "%04i", clockNum);
         const char* cBuf = clockData;
-        counter_clock.display(cBuf, 4);
+
+        counter_clock.display(cBuf);
 
         canUpdateClockDisplay = false;
     }

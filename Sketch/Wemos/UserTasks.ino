@@ -31,7 +31,7 @@ void DownloadTasks()
 
         if (urgents > 0)
         {
-            Serial.printf(" i% urgent!", urgents);
+            Serial.printf(" i% urgent!\n", urgents);
         }
         else
         {
