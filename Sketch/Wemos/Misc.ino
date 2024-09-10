@@ -19,7 +19,7 @@ void ProcessScheduler(long currentMillis)
     // Ping Attiny when power on mode
     if (!IsStandBy())
     {
-      if (lastAttinyPing < currentMillis - 10000 || lastAttinyPing > currentMillis)
+      if (lastAttinyPing < currentMillis - 20000 || lastAttinyPing > currentMillis)
       {
           PingAttiny(true);
           lastAttinyPing = currentMillis;

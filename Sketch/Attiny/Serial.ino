@@ -55,15 +55,18 @@ void ReadSerial()
         if (termReceived)
         {   
             // Release Wemos first     
-            char msg[1] = { checksum };
-            SendMessage_Serial(CHECKSUM_CONFIRM, 1, msg);
-
+            if (command_id != PING_ATTINY_SIG)
+            {
+                char msg[1] = { checksum };
+                SendMessage_Serial(CHECKSUM_CONFIRM, 1, msg);
+            }
+            
             // Now Execute command
             ExecuteCommand(command_id, dataLen, commandData);
         }
 
         // Clear buffer leftover
-        while (portOne.available() >0 ) 
+        while (portOne.available() > 0) 
         {
            portOne.read();
         }

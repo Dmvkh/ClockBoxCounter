@@ -18,7 +18,7 @@ void DownloadTasks()
 
     if (currentTasks > 0)
     {
-        Serial.print("Downloaded " + String(currentTasks) + " tasks.");
+        Serial.printf("Downloaded %i tasks.", currentTasks);
 
         byte urgents = 0;
         for (byte i = 0; i < maxTasks; ++i)
@@ -31,7 +31,7 @@ void DownloadTasks()
 
         if (urgents > 0)
         {
-            Serial.println(" " + String(urgents) + " urgent!");
+            Serial.printf(" i% urgent!", urgents);
         }
         else
         {

@@ -15,7 +15,7 @@ void LedOn()
     LeaveStandBy();
 }
 
-void LCD_WriteString(String text, byte xi, byte yi, bool updateLed)
+void LCD_WriteString(const char* text, byte xi, byte yi, bool updateLed)
 {    
     if (updateLed)
     {

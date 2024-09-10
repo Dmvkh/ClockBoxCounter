@@ -11,16 +11,20 @@ void SendSignal(int sendSignal)
     
     SetBlinking(BLINK_WHITE, 3);
     delay(500);
-
-    LCD_WriteString(String(sendSignal), 0, 1);
+    
+    char buf[LCD_SCREEN_WIDTH];
+    sprintf(buf, "%i", sendSignal);
+    LCD_WriteString(buf, 0, 1);
 
     radioSwitch.disableReceive();
     
     for (byte i = 0; i < 2; i++)
     {
         SetBlinking(BLINK_ORANGE, 1);
-
-        LCD_WriteString(String(i + 1) + " ", i * 2, 2);
+        
+        char buf[LCD_SCREEN_WIDTH];
+        sprintf(buf, "%i", i + 1);
+        LCD_WriteString(buf, i * 2, 2);
         
         radioSwitch.send(sendSignal, 24);        
         delay(1000);
@@ -83,7 +87,10 @@ void ReadRadioSignal()
             
             OLED_PrintText("N/A");
             LCD_WriteString("Unknown signal:", 0, 1);
-            LCD_WriteString(String(radioSignal), 0, 2);
+            
+            char buf[LCD_SCREEN_WIDTH];
+            sprintf(buf, "%i", radioSignal);
+            LCD_WriteString(buf, 0, 2);
             
             delay(300);
             SetBlinking(BLINK_RED, 0);
@@ -93,12 +100,18 @@ void ReadRadioSignal()
             byte blinkLed = (signal_data[0] + 2) % 6;
             SetBlinking(blinkLed, 1);
             
-            String userName = String(consoleUsers[signal_data[0]]);
+            char userName[10] = {};
+            strncpy(userName, consoleUsers[signal_data[0]], 10);
             
             OLED_PrintText(userName, 4, 255, 0);
+
+            char buf[LCD_SCREEN_WIDTH];
             
-            LCD_WriteString("User: " + userName, 0, 1);
-            LCD_WriteString("Button: " + String(signal_data[1] + 1), 0, 2);
+            sprintf(buf, "User: %s", userName);            
+            LCD_WriteString(buf, 0, 1);
+            
+            sprintf(buf, "Button: %i", signal_data[1] + 1);            
+            LCD_WriteString(buf, 0, 2);
             
             delay(200);
             SetBlinking(blinkLed, 0);

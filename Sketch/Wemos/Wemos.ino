@@ -64,9 +64,9 @@ const byte BLINK_ORANGE = 5;
 const byte BLINK_POLICE = 6;
 
 // Function prototypes with optional parameters
-void OLED_PrintText(String text = "", byte textSize = 3, byte brightness = 50, byte eraseAfterSec = 5);
+void OLED_PrintText(const char* text = NULL, byte textSize = 3, byte brightness = 50, byte eraseAfterSec = 5);
 void SetLeds(bool led_blue = false, bool led_red = false, bool led_green = false, bool led_yellow = false, bool led_white = false, bool led_orange = false);
-void LCD_WriteString(String text, byte xi, byte yi, bool updateLed = true);
+void LCD_WriteString(const char* text, byte xi, byte yi, bool updateLed = true);
 void PlaySound(char sound = BUZZER_CLICK);
 
 void setup() {
