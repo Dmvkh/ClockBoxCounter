@@ -10,7 +10,7 @@ bool isShowingProgress = false;
 long printEraseTime = 0;
 
 int display_cursor_x, minX;
-String scroll_message = "";
+char scroll_message[255] = {};
 
 void CheckOledPrintingState(long currentMillis)
 {
@@ -38,12 +38,12 @@ void OLED_ToggleProgress(bool ison)
     isShowingProgress = ison;
 }
 
-void OLED_PrintText(String text, byte textSize, byte brightness, byte eraseAfterSec)
+void OLED_PrintText(const char* text, byte textSize, byte brightness, byte eraseAfterSec)
 {
     oled.clearDisplay();
     oled.dim(brightness);
     
-    if (text != "")
+    if (text != NULL)
     {
         int16_t x1, y1;
         uint16_t w, h;
@@ -93,7 +93,7 @@ void OLED_ScrollMessage(long currentMillis)
       {
           display_cursor_x= oled.width(); 
           
-          minX = -12 * scroll_message.length();
+          minX = -12 * strlen(scroll_message);
       }
   
       lastMillisScroll = currentMillis;
@@ -102,14 +102,16 @@ void OLED_ScrollMessage(long currentMillis)
 
 void OLED_Clear()
 {
-    scroll_message = "";
+    memset(scroll_message, 0, sizeof(scroll_message));
     oled.clearDisplay();
     oled.display();
 }
 
 void OLED_AddProgress(long currentMillis)
 {
-    OLED_PrintText(String(upd[progressStep]));
+    char buf[2] = {};
+    strcpy(buf, upd[progressStep]);
+    OLED_PrintText(buf);
 
     if (++progressStep > 3)
     {

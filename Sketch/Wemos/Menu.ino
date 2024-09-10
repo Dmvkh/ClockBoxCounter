@@ -360,7 +360,10 @@ void DrawMenuOptions(byte optionsSize, byte activeItem)
     
         if (optionsSize > item_no)
         {
-            LCD_WriteString("  " + String(options[item_no]), 0, i);
+            char buf[LCD_SCREEN_WIDTH] = {};
+            sprintf(buf, "  %s", options[item_no]);
+            
+            LCD_WriteString(buf, 0, i);
       
             if (item_no == activeItem)
             {

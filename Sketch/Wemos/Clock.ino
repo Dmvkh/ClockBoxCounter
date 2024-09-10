@@ -17,22 +17,11 @@ void ShowClock(long currentMillis)
     // Update display
     if (canUpdateClockDisplay && IsStandBy())
     {
-        String clockData = String(clockMins + clockHour * 100);
-
-        if (clockData.length() < 2)
-        {
-            clockData = "000" + clockData;
-        }
-        else if (clockData.length() < 3)
-        {
-            clockData = "00" + clockData;
-        }
-        else if (clockData.length() < 4)
-        {
-            clockData = "0" + clockData;
-        }
-        
-        counter_clock.display(clockData);
+        int clockNum = clockMins + clockHour * 100;
+        char clockData[4];
+        sprintf(clockData, "%000i", clockNum);
+        const char* cBuf = clockData;
+        counter_clock.display(cBuf, 4);
 
         canUpdateClockDisplay = false;
     }
@@ -83,7 +72,7 @@ void ShowClock(long currentMillis)
 
 void UpdateClockTime(byte hh, byte mi, byte ss)
 {
-    Serial.println("System time updated: " + String(hh) + "h " + String(mi) + "m "+ String(ss) + "s.");
+    Serial.printf("System time updated: %ih %im %is.\n", hh, mi, ss);
     
     clockHour = hh;
     clockMins = mi;

@@ -19,7 +19,7 @@ void ListenSerial()
    {
         char command_id = Serial.read();        
         delay(10);
-        
+
         if (command_id != ATT_ID_CHAR || !Serial.available())
         {
             return;
@@ -93,7 +93,7 @@ void ListenSerial()
 
 void SetBlinking(byte blink_mode, int blinkSpeed)
 {
-    byte s1 = byte(blinkSpeed / 100);
+    byte s1 = byte((blinkSpeed % 1000) / 100);
     byte s2 = byte((blinkSpeed % 100) / 10);
     byte s3 = byte(blinkSpeed % 10);
 
@@ -196,24 +196,24 @@ void SendSerialCommand(char command_id, char* command_data, byte dataLen)
             }
             else
             {
-                Serial.println("Attiny responded with a wrong checksum: '" + String(receivedCheckSum) + "'; Expected: '" + String(checksum) + "'!");
-            }
-
-            // Clear buffer leftover
-            while (Serial.available() >0 ) 
-            {
-               Serial.read();
+                Serial.printf("Attiny responded with a wrong checksum: ' %s'; Expected: '%s'!\n", receivedCheckSum, checksum);
             }
         }
     }
 
+    // Clear buffer leftover
+    while (Serial.available() >0 ) 
+    {
+       Serial.read();
+    }
+            
     // Give time to Attiny to read and react to serial command
     delay(50 + ((dataLen + 6) * 5));
 }
 
 bool PingAttiny(bool force)
 {
-    if (!attiny_started && !isAttinyWaiting)
+    if (!attiny_started && !isAttinyWaiting && !IsStandBy())
     {
         isAttinyWaiting = true;
         InterruptMenu(0);
@@ -235,7 +235,7 @@ bool PingAttiny(bool force)
     if (!attiny_started)
     {
         byte dataLen = 1;
-        char serialData[dataLen] = { '1', };
+        char serialData[dataLen] = { '1' };
         
         SendSerialCommand(PING_ATTINY_SIG, serialData, dataLen);
         
