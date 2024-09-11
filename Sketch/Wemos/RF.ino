@@ -1,15 +1,14 @@
 void SendSignal(int sendSignal)
 {
     InterruptMenu(10);
-    
+
     OLED_PrintText("WRITING RF", 2);
+    SetBlinking(BLINK_WHITE, 3);
     
     radioSwitch.resetAvailable();
 
     lcd.clear();
     LCD_WriteString("Sending 433 Mhz code:", 0, 0);
-    
-    SetBlinking(BLINK_WHITE, 3);
     delay(500);
     
     char buf[LCD_SCREEN_WIDTH];

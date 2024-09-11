@@ -1,8 +1,8 @@
-long lcd_turn_time = 0;
-            
-void LCD_CheckStandBy(long currentMillis)
+char scrollBuffer[LCD_SCREEN_HEIGHT][LCD_SCREEN_WIDTH - 2] = {};
+
+void LCD_CheckStandBy(unsigned long currentMillis)
 {
-    if (!IsStandBy() && ((lcd_turn_time > currentMillis || lcd_turn_time < currentMillis - (1000 * 60))))
+    if (!IsStandBy() && IsTriggerTime(TimeWatch_StandBy, currentMillis, 60000))
     {
         EnterStandBy();
     }
@@ -11,7 +11,7 @@ void LCD_CheckStandBy(long currentMillis)
 void LedOn()
 {
     lcd.backlight();
-    lcd_turn_time = millis();
+    UpdateTriggerTime(TimeWatch_StandBy, millis());
     LeaveStandBy();
 }
 
@@ -36,4 +36,27 @@ void LCD_ShowWelcome()
     lcd.clear();
     LCD_WriteString("CLOCK COUNTER v1.0", 1, 0, !IsStandBy());
     LCD_WriteString("press any key...", 2, 2, !IsStandBy());
+}
+
+void LCD_ScrollText(const char* text, bool continueScroll)
+{    
+    LedOn();
+
+    if (!continueScroll)
+    {
+        memset(scrollBuffer, 0, sizeof(scrollBuffer));
+    }
+
+    char options[LCD_SCREEN_HEIGHT][LCD_SCREEN_WIDTH - 2];
+
+    for (byte i = LCD_SCREEN_HEIGHT - 1; i > 0; --i)
+    {
+        memcpy(scrollBuffer[i], scrollBuffer[i - 1], sizeof(scrollBuffer[i]));
+        memcpy(options[i], scrollBuffer[i - 1], sizeof(options[i]));
+    }
+
+    strncpy(scrollBuffer[0], text, size_t(LCD_SCREEN_WIDTH - 2));
+    memcpy(options[0], scrollBuffer[0], sizeof(options[0]));
+    
+    DrawMenuOptions(LCD_SCREEN_HEIGHT, options, 0);
 }

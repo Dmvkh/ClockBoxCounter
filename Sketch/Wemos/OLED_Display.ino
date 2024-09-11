@@ -1,28 +1,23 @@
-const char* upd[4] = { "|", "/", "--", "\\"};
+const char* progressSign[4] = { "|", "/", "--", "\\"};
 const byte scroll_speed = 10;
 
-long lastMillisScroll = 0;
-
-long progressUpdateTime = 0;
 byte progressStep = 0;
 bool isShowingProgress = false;
-
-long printEraseTime = 0;
 
 int display_cursor_x, minX;
 char scroll_message[255] = {};
 
-void CheckOledPrintingState(long currentMillis)
+void CheckOledPrintingState(unsigned long currentMillis)
 {
-    if (currentMillis > printEraseTime && printEraseTime != 0)
+    if (GetWatcherTime(TimeWatch_OLEDPrintErase) != 0 && currentMillis > GetWatcherTime(TimeWatch_OLEDPrintErase))
     {
         OLED_Clear();
-        printEraseTime = 0;
+        UpdateTriggerTime(TimeWatch_OLEDPrintErase, 0);
     }
 
     if (isShowingProgress)
     {
-        if (progressUpdateTime < currentMillis - 500)
+        if (IsTriggerTime(TimeWatch_OLEDProgressUpdate, currentMillis, 300, false, false))
         {
             OLED_AddProgress(currentMillis);
         }
@@ -62,22 +57,22 @@ void OLED_PrintText(const char* text, byte textSize, byte brightness, byte erase
 
     if (eraseAfterSec > 0)
     {
-        printEraseTime = millis() + (eraseAfterSec * 1000);
+         UpdateTriggerTime(TimeWatch_OLEDPrintErase, millis() + (eraseAfterSec * 1000));
     }
     else
     {
-        printEraseTime = 0;
+        UpdateTriggerTime(TimeWatch_OLEDPrintErase, 0);
     }
 }
 
-void OLED_ScrollMessage(long currentMillis)
+void OLED_ScrollMessage(unsigned long currentMillis)
 {  
   if (scroll_message == "")
   {
     return;
   }
   
-  if ((currentMillis - lastMillisScroll > scroll_speed || lastMillisScroll > currentMillis))
+  if (IsTriggerTime(TimeWatch_OLEDScroll, currentMillis, scroll_speed))
   {
       oled.clearDisplay(); 
     
@@ -95,8 +90,6 @@ void OLED_ScrollMessage(long currentMillis)
           
           minX = -12 * strlen(scroll_message);
       }
-  
-      lastMillisScroll = currentMillis;
   }
 }
 
@@ -107,16 +100,16 @@ void OLED_Clear()
     oled.display();
 }
 
-void OLED_AddProgress(long currentMillis)
+void OLED_AddProgress(unsigned long currentMillis)
 {
     char buf[2] = {};
-    strcpy(buf, upd[progressStep]);
+    strcpy(buf, progressSign[progressStep]);
     OLED_PrintText(buf);
 
     if (++progressStep > 3)
     {
         progressStep = 0;
     }
-    
-    progressUpdateTime = currentMillis;
+
+    UpdateTriggerTime(TimeWatch_OLEDProgressUpdate, currentMillis);
 }

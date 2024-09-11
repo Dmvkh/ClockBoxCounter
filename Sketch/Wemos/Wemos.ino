@@ -43,6 +43,23 @@ TM1637 counter_number(D0, D3);
 Encoder rotaryEncoder(D7, D8);
 
 // Global consts
+enum TimeWatch
+{
+     TimeWatch_Clock, // 0
+     TimeWatch_WiFiTaskUpdate,
+     TimeWatch_WiFiConnect,
+     TimeWatch_StandBy,
+     TimeWatch_ScheduledStandBy,
+     TimeWatch_MenuInterrupt,
+     TimeWatch_AttinyPing,
+     TimeWatch_OLEDScroll,
+     TimeWatch_OLEDProgressUpdate,
+     TimeWatch_OLEDPrintErase,
+     TimeWatch_CancelBtnPress,
+     TimeWatch_Demo,
+     WatchersCount,
+};
+
 const char SET_LEDS_MODE = '1';
 const char SET_BLINK_MODE = '2';
 const char SET_BUZZER_PLAY = '3';
@@ -68,6 +85,11 @@ void OLED_PrintText(const char* text = NULL, byte textSize = 3, byte brightness 
 void SetLeds(bool led_blue = false, bool led_red = false, bool led_green = false, bool led_yellow = false, bool led_white = false, bool led_orange = false);
 void LCD_WriteString(const char* text, byte xi, byte yi, bool updateLed = true);
 void PlaySound(char sound = BUZZER_CLICK);
+bool IsTriggerTime(TimeWatch watcher, unsigned long currentMillis, unsigned int tickInterval, bool triggerOnInit = false, bool updateTimeOnTrigger = true);
+void LCD_ScrollText(const char* text, bool continueScroll = true);
+
+void DrawMenuOptions(byte optionsSize, char options[255][LCD_SCREEN_WIDTH - 2], byte activeItem);
+void GetUserTasks(byte user_id, byte& optionsSize, char options[255][LCD_SCREEN_WIDTH - 2]);
 
 void setup() {
   
@@ -125,7 +147,7 @@ void setup() {
 }
 
 void loop() {
-    long currentMillis =  millis();
+    unsigned long currentMillis =  millis();
 
     LCD_CheckStandBy(currentMillis);
 
