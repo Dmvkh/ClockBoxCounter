@@ -7,9 +7,6 @@ const int taskUpdateIntervalSec = 600;
 // Web service API address defined elsewhere
 const char* taskDataAPI = WEB_SERVICE_API_ADDRESS;
 
-long lastTaskUpdate = 0;
-long lastWiFiCheck = 0;
-
 bool updateInit = false;
 bool timeClientStarted = false;
 
@@ -29,7 +26,7 @@ void ShowConnectLogo()
     LCD_WriteString("Updating...", 5, 1, false);
 }
 
-void BeginUpdateTasks(long currentMillis, int waitTime = 0)
+void BeginUpdateTasks(unsigned long currentMillis, int waitTime = 0)
 {
     updateInit = true;
     BeginConnectToWiFi();    
@@ -59,8 +56,7 @@ void BeginUpdateTasks(long currentMillis, int waitTime = 0)
         {
             Serial.println("Can't connect to Wi-Fi. Aborting update.");
             
-            WiFi.disconnect();            
-            lastTaskUpdate = currentMillis;
+            WiFi.disconnect();
             FinishConnectingToWiFi(currentMillis, false);
         }
     }
@@ -96,7 +92,7 @@ void ForceUpdateTasks()
     InterruptMenu(3);
 }
 
-void FinishConnectingToWiFi(long currentMillis, bool isSuccessful)
+void FinishConnectingToWiFi(unsigned long currentMillis, bool isSuccessful)
 {
     if (!updateInit)
     {
@@ -114,7 +110,7 @@ void FinishConnectingToWiFi(long currentMillis, bool isSuccessful)
         OLED_PrintText("ERROR");
     }
  
-    lastTaskUpdate = currentMillis;
+    UpdateTriggerTime(TimeWatch_WiFiTaskUpdate, currentMillis);
     updateInit = false;
         
     if (!IsMenuInterrupted() && !IsStandBy())
@@ -130,25 +126,24 @@ void FinishConnectingToWiFi(long currentMillis, bool isSuccessful)
 void UpdateUserTasks()
 {  
     // Millis shouldn't be passed, to prevent double update when manual update triggered
-    long currentMillis = millis();
+    unsigned long currentMillis = millis();
     
-    if (lastTaskUpdate < currentMillis - (taskUpdateIntervalSec * 1000) || lastTaskUpdate > currentMillis || lastTaskUpdate == 0)
+    if (IsTriggerTime(TimeWatch_WiFiTaskUpdate, currentMillis, (taskUpdateIntervalSec * 1000)))
     {
         Serial.println("Begin scheduled tasks update.");
-        lastTaskUpdate = currentMillis;
+        UpdateTriggerTime(TimeWatch_WiFiTaskUpdate, currentMillis);
         BeginUpdateTasks(currentMillis);
     }
 
-    if (lastWiFiCheck < currentMillis - 500 || lastWiFiCheck > currentMillis)
+    if (IsTriggerTime(TimeWatch_WiFiConnect, currentMillis, 500))
     {
-        lastWiFiCheck = currentMillis;
         CommenceAsyncUpdate();
         
         UpdateTasksState();
     }
 
     // Restart Wi-Fi connection if connection hasn't been established for too long
-    if (lastTaskUpdate < currentMillis - 30000 && updateInit)
+    if (IsTriggerTime(TimeWatch_WiFiTaskUpdate, currentMillis, 30000, false, false) && updateInit)
     {
         Serial.println("Restarting WI-FI connection.");
         WiFi.disconnect();

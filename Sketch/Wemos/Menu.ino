@@ -11,7 +11,7 @@ const byte usersTotal = 4;
 const char* consoleUsers[usersTotal] = { "Dad", "Max", "Fox", "Mom", };
 const byte consoleButtons = 4;
 
-char options[255][18] = {};
+char options[255][LCD_SCREEN_WIDTH - 2] = {};
 
 byte interruptRestoreTimeoutSecs = 30;
 
@@ -22,13 +22,12 @@ bool isMenuActive = false;
 bool canRedrawMenu = true;
 
 bool isMenuInterrupted = false;
-long menuInterruptionTime = 0;
 
-void CheckMenuInterruption(long curtrentMillis)
+void CheckMenuInterruption(long currentMillis)
 {
-    if (isMenuInterrupted && menuInterruptionTime < curtrentMillis - interruptRestoreTimeoutSecs * 1000)
+    if (interruptRestoreTimeoutSecs > 0 && isMenuInterrupted && IsTriggerTime(TimeWatch_MenuInterrupt, currentMillis, interruptRestoreTimeoutSecs * 1000))
     {
-      TryRestoreInterruptedMenu();
+        TryRestoreInterruptedMenu();
     }
 }
 
@@ -37,25 +36,22 @@ bool IsMenuInterrupted()
     return isMenuInterrupted;
 }
 
+// 0 - Unlimited interruption until manually restored
 void InterruptMenu(byte interruptLengthSecs)
 {
-    isMenuInterrupted = interruptLengthSecs > 0;
-  
-    if (isMenuInterrupted)
-    {
-      interruptRestoreTimeoutSecs = interruptLengthSecs;
-      menuInterruptionTime = millis();
-    }
+    isMenuInterrupted = true;
+    interruptRestoreTimeoutSecs = interruptLengthSecs;
+    UpdateTriggerTime(TimeWatch_MenuInterrupt, millis());
 }
 
 void TryRestoreInterruptedMenu()
 {
     if (isMenuInterrupted)
     {
-      isMenuInterrupted = false;
-      canRedrawMenu = true;
-  
-      ShowMenu();
+        isMenuInterrupted = false;
+        canRedrawMenu = true;
+
+        ShowMenu();
     }
 }
 
@@ -157,7 +153,12 @@ void ChangeMenuLevel(bool goUp)
 
 void ShowMenu()
 {
-    if (!canRedrawMenu)
+    if (!IsUIActivated())
+    {
+        LCD_ShowWelcome();
+        return;
+    }
+    else if (!canRedrawMenu)
     {
         return;
     }
@@ -171,7 +172,7 @@ void ShowMenu()
     
     if (optionsSize > 0)
     {
-        DrawMenuOptions(optionsSize, activeItem);
+        DrawMenuOptions(optionsSize, options, activeItem);
     }
   
     canRedrawMenu = false;
@@ -211,7 +212,7 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
                 
                     optionsSize = 2;
                     strcpy(options[0], "Sound test");
-                    strcpy(options[0], "Launch demo");
+                    strcpy(options[1], "Launch demo");
           
                     break;
             }
@@ -290,8 +291,38 @@ void ExecuteCurrentMenuItem()
                   EnterStandBy();
         
                   break;
-          }
-    
+            }
+            
+            break;
+          
+        case 1:            
+            switch (selItems[0])
+            {
+                // Settings selected
+                case 3:
+                  
+                  switch (activeItem)
+                  {
+                      // Sound test
+                      case 0:
+
+                          DoSoundTest();
+                          
+                          break;
+
+                      // Play Demo
+                      case 1:
+
+                          DoStartDemo();
+                          
+                          break;
+                  }
+                  
+                  break;
+            }
+            
+            break;
+            
         case 2:
             switch (selItems[0])
             {
@@ -343,7 +374,7 @@ byte GetCurrentMenuLevel()
     return menuLevel;
 }
 
-void DrawMenuOptions(byte optionsSize, byte activeItem)
+void DrawMenuOptions(byte optionsSize, char options[255][LCD_SCREEN_WIDTH - 2], byte activeItem)
 {
     lcd.clear();
   

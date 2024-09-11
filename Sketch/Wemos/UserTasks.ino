@@ -80,7 +80,7 @@ void UpdateTasksState()
     }
 }
 
-void GetUserTasks(byte user_id, byte& optionsSize, char options[255][18])
+void GetUserTasks(byte user_id, byte& optionsSize, char options[255][LCD_SCREEN_WIDTH - 2])
 {
     optionsSize = 3;
     

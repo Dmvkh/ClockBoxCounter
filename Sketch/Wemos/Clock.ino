@@ -2,12 +2,10 @@ byte clockSecs = 0;
 byte clockMins = 0;
 byte clockHour = 0;
 
-long colonUpdate = 0;
-
 bool canUpdateClockDisplay = true;
 bool isClockMode = false;
 
-void ShowClock(long currentMillis)
+void ShowClock(unsigned long currentMillis)
 {
     if (IsStandBy() && !isClockMode) 
     {         
@@ -28,10 +26,8 @@ void ShowClock(long currentMillis)
     }
 
     // Tick seconds
-    if (colonUpdate < currentMillis - 1000 || currentMillis < colonUpdate || colonUpdate == 0)
+    if (IsTriggerTime(TimeWatch_Clock, currentMillis, 1000, true))
     {
-        colonUpdate = currentMillis;
-
         clockSecs++;
 
         if (clockSecs >= 60)

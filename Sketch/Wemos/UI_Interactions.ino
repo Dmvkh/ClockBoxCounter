@@ -1,12 +1,17 @@
-long lastPressTime = 0;
 long encOldPosition  = 0;
+bool isUIActivated = false;
 
 void InitEncoder()
 {
     encOldPosition = rotaryEncoder.read();
 }
 
-void ListenUIInteractions(long currentMillis)
+bool IsUIActivated()
+{
+    return isUIActivated;
+}
+
+void ListenUIInteractions(unsigned long currentMillis)
 {    
     // Interrupts of rotary encoder break Wi-Fi connection sequence!
     if (IsConnectingToWiFi())
@@ -22,6 +27,8 @@ void ListenUIInteractions(long currentMillis)
         {
             TryRestoreInterruptedMenu();
             
+            isUIActivated = true;
+            
             if (IsMenuActive())
             {
                 UpdateActiveItem(encOldPosition < encCurrentPosition);
@@ -30,15 +37,15 @@ void ListenUIInteractions(long currentMillis)
             {
                 ShowMenu();
             }
-            
+
             encOldPosition = encCurrentPosition;
         }
     }
     
-    if (analogRead(wheel_press) < 100 && (lastPressTime < currentMillis - 500 || lastPressTime > currentMillis))
-    { 
-        lastPressTime = currentMillis;
-
+    if (analogRead(wheel_press) < 100 && IsTriggerTime(TimeWatch_CancelBtnPress, currentMillis, 500))
+    {
+        isUIActivated = true;
+        
         TryRestoreInterruptedMenu();
         
         if (IsMenuActive())
