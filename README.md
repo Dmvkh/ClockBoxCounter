@@ -136,7 +136,8 @@ Push-up buttons, ultra-bright 3mm LEDs, breadboard, electronic components (diode
 - [ ] Add user menu interface **IN PROGRESS**
   - [x] Add placeholder screen for Standby mode (when backlight is off)
   - [x] Add menu interruption and resuming functions to show temporary messages
-  - [ ] Create Demo in Settings menu  **TODO**
+  - [x] Create Demo in Settings menu
+  - [ ] Add ClockBox settings, stored in DB via API
 - [x] Add LCD display text printing routine
 - [x] Add OLED display text printing routine
   - [x] Add auto closing pop-up messages
