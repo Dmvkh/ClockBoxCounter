@@ -25,3 +25,28 @@ void PlayOK()
     noTone();    
     tone(buzzer, 1500, 200);
 }
+
+void PlayAlert_1()
+{
+    noTone();
+    tone(buzzer, 3000, 300);
+}
+
+void PlayAlert_2()
+{
+    noTone();
+    tone(buzzer, 600, 800);
+    delay(800);
+    
+    noTone();
+    
+    tone(buzzer, 200, 800);
+    delay(800);
+
+    noTone();    
+    tone(buzzer, 600, 800);
+    delay(800);
+    
+    noTone();    
+    tone(buzzer, 200, 800);
+}
