@@ -210,9 +210,10 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
                 // Show settings menu
                 case 3:
                 
-                    optionsSize = 2;
+                    optionsSize = 3;
                     strcpy(options[0], "Sound test");
                     strcpy(options[1], "Launch demo");
+                    strcpy(options[2], "Blink test");
           
                     break;
             }
@@ -314,6 +315,13 @@ void ExecuteCurrentMenuItem()
                       case 1:
 
                           DoStartDemo();
+                          
+                          break;
+
+                      // Blink test
+                      case 2:
+
+                          StartBlinkTest();
                           
                           break;
                   }

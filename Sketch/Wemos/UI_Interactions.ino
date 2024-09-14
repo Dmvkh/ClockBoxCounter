@@ -6,12 +6,17 @@ void InitEncoder()
     encOldPosition = rotaryEncoder.read();
 }
 
+long GetEncoderPosition()
+{
+    return encOldPosition;
+}
+
 bool IsUIActivated()
 {
     return isUIActivated;
 }
 
-void ListenUIInteractions(unsigned long currentMillis)
+void ListenUIInteractions(unsigned long currentMillis, bool allowRestoreInterruptedMenu)
 {    
     // Interrupts of rotary encoder break Wi-Fi connection sequence!
     if (IsConnectingToWiFi())
@@ -25,7 +30,10 @@ void ListenUIInteractions(unsigned long currentMillis)
     {   
         if (encCurrentPosition > encOldPosition + 1 || encCurrentPosition < encOldPosition - 1)
         {
-            TryRestoreInterruptedMenu();
+            if (allowRestoreInterruptedMenu)
+            {
+                TryRestoreInterruptedMenu();
+            }
             
             isUIActivated = true;
             
@@ -46,7 +54,10 @@ void ListenUIInteractions(unsigned long currentMillis)
     {
         isUIActivated = true;
         
-        TryRestoreInterruptedMenu();
+        if (allowRestoreInterruptedMenu)
+        {
+            TryRestoreInterruptedMenu();
+        }
         
         if (IsMenuActive())
         {

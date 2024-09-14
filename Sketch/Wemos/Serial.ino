@@ -13,6 +13,13 @@ char receivedCheckSum = CHECKSUMM_ERR;
 
 bool isAttinyWaiting = false;
 
+byte buttonClicks = 0;
+
+byte GetCancelClicks()
+{
+    return buttonClicks;
+}
+
 void ListenSerial()
 {   
    if (Serial.available() > 0)
@@ -56,6 +63,7 @@ void ListenSerial()
                   if (dataLen == 1 && commandData[0] == '1')
                   {   
                       UI_BackButtonPressed();
+                      buttonClicks++;
                   }
                   
                   break;
@@ -91,18 +99,22 @@ void ListenSerial()
     }
 }
 
-void SetBlinking(byte blink_mode, int blinkSpeed)
+// offTimesLonger 0-10 light longer, 10 - even, > 10 darkness longer
+void SetBlinking(byte blink_mode, int blinkSpeed, byte offTimesLonger)
 {
     byte s1 = byte((blinkSpeed % 1000) / 100);
     byte s2 = byte((blinkSpeed % 100) / 10);
     byte s3 = byte(blinkSpeed % 10);
 
-    byte dataLen = 4;
+    char darkByte = 'A' + offTimesLonger;
+    
+    byte dataLen = 5;
     char serialData[dataLen] = { 
       (char)('0' + blink_mode),
       (char)('0' + s1),
       (char)('0' + s2),
-      (char)('0' + s3)
+      (char)('0' + s3),
+      darkByte,
     };
     
     SendSerialCommand(SET_BLINK_MODE, serialData, dataLen);

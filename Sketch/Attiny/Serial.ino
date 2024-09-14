@@ -84,7 +84,7 @@ void ExecuteCommand(char command_id, byte dataLen, char* commandData)
           {
               for (byte i = 0; i < blink_modes_total; ++i)
               {
-                  SetBlinkMode(i, commandData[i] == '1' ? 255 : 0);
+                  SetBlinkMode(i, commandData[i] == '1' ? 255 : 0, (char)('A' + 10));
               }
           }
           
@@ -93,13 +93,13 @@ void ExecuteCommand(char command_id, byte dataLen, char* commandData)
         // Blink control
         case SET_BLINK_MODE:
 
-          if (dataLen == 4)
+          if (dataLen == 5)
           {
               // Extract led no
               byte led_id = (byte)(commandData[0] - '0');
               byte blinkSpeed = ((byte)(commandData[1] - '0') * 100) + ((byte)(commandData[2] - '0') * 10) + ((byte)(commandData[3] - '0'));
 
-              SetBlinkMode(led_id, blinkSpeed);
+              SetBlinkMode(led_id, blinkSpeed, commandData[4]);
           }
 
           break;
@@ -119,6 +119,14 @@ void ExecuteCommand(char command_id, byte dataLen, char* commandData)
               else if (commandData[0] == '3')
               {
                   PlayError();
+              }
+              else if (commandData[0] == '4')
+              {
+                  PlayAlert_1();
+              }
+              else if (commandData[0] == '5')
+              {
+                  PlayAlert_2();
               }
           }
           

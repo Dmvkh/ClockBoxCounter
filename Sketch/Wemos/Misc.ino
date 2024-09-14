@@ -88,7 +88,21 @@ void DoSoundTest()
     LCD_WriteString("Playing Error Sound:", 0, 1);
     
     PlaySound(BUZZER_ERROR);
-
+    
+    delay(500);
+    
+    lcd.clear();
+    LCD_WriteString("Playing Alarm 1", 0, 1);
+    
+    PlaySound(BUZZER_ALARM_1);
+    
+    delay(500);
+    
+    lcd.clear();
+    LCD_WriteString("Playing Alarm 2", 0, 1);
+    
+    PlaySound(BUZZER_ALARM_2);
+    
     delay(500);
     lcd.clear();
     LCD_WriteString("Playing Click Sound:", 0, 1);
@@ -146,9 +160,9 @@ void ProcessDemoStep()
     else if (demo_counter == 9) // 10 + 11
     {
         LCD_ScrollText("Police blinking");
+        PlaySound(BUZZER_ALARM_2);
         SetBlinking(BLINK_BLUE, 0);
         SetBlinking(BLINK_POLICE, 10);
-        PlaySound();
     }
     else if (demo_counter == 12) //13
     {
@@ -163,11 +177,17 @@ void ProcessDemoStep()
         PlaySound();
         SetLeds();
     }
-    else if (demo_counter == 15) //16
+    else if (demo_counter == 15)
     {
         LCD_ScrollText("Play OK");
         SetLeds();
         PlaySound(BUZZER_OK);
+    }
+    else if (demo_counter == 16)
+    { 
+        LCD_ScrollText("Play Alarm 1");
+        SetLeds();
+        PlaySound(BUZZER_ALARM_1);
     }
     else if (demo_counter == 17) //18
     {
@@ -260,4 +280,44 @@ void UpdateTriggerTime(TimeWatch watcher, unsigned long currentMillis)
 unsigned long GetWatcherTime(TimeWatch watcher)
 {
     return timeWatchers[watcher];
+}
+
+void StartBlinkTest()
+{
+    InterruptMenu(0);
+    lcd.clear();
+    LCD_WriteString("Testing Blinks:", 0, 0);
+
+    byte btnVal = GetCancelClicks();
+    long encPos = 100000;
+    byte testNo = 0;
+    
+    while (btnVal == GetCancelClicks() && testNo < 7)
+    {        
+        if (encPos != GetEncoderPosition())
+        {
+            Serial.printf("Blink test #%i\n", testNo);
+            encPos = GetEncoderPosition();
+            
+            if (testNo < 6)
+            {
+                char str[20] = {};
+                sprintf(str, "Testing mode #%i", (testNo + 1));
+                LCD_WriteString(str, 0, 2);
+            
+                SetBlinking(testNo, 3, testNo * 5);
+            }
+
+            testNo++;
+        }
+
+        ListenUIInteractions(millis(), false);
+        ListenSerial();
+        delay(100);
+    }
+    
+    Serial.printf("Test ended #%i\n", testNo);
+    
+    SetLeds();
+    TryRestoreInterruptedMenu();
 }

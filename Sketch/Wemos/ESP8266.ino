@@ -4,9 +4,6 @@ const char* password = WIFI_PASSWORD;
 
 const int taskUpdateIntervalSec = 600;
 
-// Web service API address defined elsewhere
-const char* taskDataAPI = WEB_SERVICE_API_ADDRESS;
-
 bool updateInit = false;
 bool timeClientStarted = false;
 
@@ -128,7 +125,7 @@ void UpdateUserTasks()
     // Millis shouldn't be passed, to prevent double update when manual update triggered
     unsigned long currentMillis = millis();
     
-    if (IsTriggerTime(TimeWatch_WiFiTaskUpdate, currentMillis, (taskUpdateIntervalSec * 1000)))
+    if (IsTriggerTime(TimeWatch_WiFiTaskUpdate, currentMillis, (taskUpdateIntervalSec * 1000), true))
     {
         Serial.println("Begin scheduled tasks update.");
         UpdateTriggerTime(TimeWatch_WiFiTaskUpdate, currentMillis);

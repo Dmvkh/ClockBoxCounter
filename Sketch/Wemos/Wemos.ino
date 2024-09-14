@@ -71,13 +71,15 @@ const char CHECKSUM_CONFIRM = '7';
 const char BUZZER_CLICK = '1';
 const char BUZZER_OK = '2';
 const char BUZZER_ERROR = '3';
+const char BUZZER_ALARM_1 = '4';
+const char BUZZER_ALARM_2 = '5';
 
-const byte BLINK_BLUE = 0;
-const byte BLINK_RED = 1;
-const byte BLINK_GREEN = 2;
-const byte BLINK_YELLOW = 3;
-const byte BLINK_WHITE = 4;
-const byte BLINK_ORANGE = 5;
+const byte BLINK_BLUE = 5;
+const byte BLINK_RED = 4;
+const byte BLINK_GREEN = 3;
+const byte BLINK_YELLOW = 2;
+const byte BLINK_WHITE = 1;
+const byte BLINK_ORANGE = 0;
 const byte BLINK_POLICE = 6;
 
 // Function prototypes with optional parameters
@@ -87,6 +89,8 @@ void LCD_WriteString(const char* text, byte xi, byte yi, bool updateLed = true);
 void PlaySound(char sound = BUZZER_CLICK);
 bool IsTriggerTime(TimeWatch watcher, unsigned long currentMillis, unsigned int tickInterval, bool triggerOnInit = false, bool updateTimeOnTrigger = true);
 void LCD_ScrollText(const char* text, bool continueScroll = true);
+void SetBlinking(byte blink_mode, int blinkSpeed, byte offTimesLonger = 10);
+void ListenUIInteractions(unsigned long currentMillis, bool allowRestoreInterruptedMenu = true);
 
 void DrawMenuOptions(byte optionsSize, char options[255][LCD_SCREEN_WIDTH - 2], byte activeItem);
 void GetUserTasks(byte user_id, byte& optionsSize, char options[255][LCD_SCREEN_WIDTH - 2]);
@@ -137,6 +141,9 @@ void setup() {
     } 
     
     SetLeds(true, true, true, true, true, true); 
+    
+    counter_clock.clearScreen();
+    counter_number.clearScreen();
     
     SetLeds();
 

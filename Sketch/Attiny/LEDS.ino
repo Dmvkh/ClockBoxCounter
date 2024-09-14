@@ -1,6 +1,10 @@
 const byte blink_modes_total = 7;
+const byte leds_total = 6;
 byte alerts[blink_modes_total] = {0, 0, 0, 0, 0, 0, 0};
 byte led_states = 0;
+
+byte led_onoff_ratios[leds_total] = {10, 10, 10, 10, 10, 10};
+byte led_switch_counters[leds_total] = {0, 0, 0, 0, 0, 0};
 
 byte rb_step = 0;
 
@@ -49,7 +53,7 @@ byte GetLedPin(byte led_no)
 
 void ExecuteBlinking(long currentMillis)
 {
-    for (byte i = 0; i < 6; ++i)
+    for (byte i = 0; i < leds_total; ++i)
     {
         bool canBlink = false;
 
@@ -66,16 +70,31 @@ void ExecuteBlinking(long currentMillis)
             if (warning_updates[i] < currentMillis - (100 * alerts[i]) || currentMillis < warning_updates[i])
             {
                 warning_updates[i] = currentMillis;
+
+                bool isLedOn = bitRead(led_states, i);
+                int onOffDifference = 10 - led_onoff_ratios[i];
+
+                led_switch_counters[i] = led_switch_counters[i] + 1;                
                 
-                if (bitRead(led_states, i))
+                if (isLedOn)
                 {
-                    bitClear(led_states, i);                
-                    digitalWrite(led_pin, LOW);
+                    if (led_switch_counters[i] > onOffDifference)
+                    {
+                        bitClear(led_states, i);                
+                        digitalWrite(led_pin, LOW);
+
+                        led_switch_counters[i] = 0;
+                    }
                 }
                 else 
                 {
-                    bitSet(led_states, i);                
-                    digitalWrite(led_pin, HIGH);
+                    if (led_switch_counters[i] > -1 * onOffDifference)
+                    {
+                        bitSet(led_states, i);                
+                        digitalWrite(led_pin, HIGH);
+
+                        led_switch_counters[i] = 0;
+                    }
                 }
             }
         }
@@ -122,8 +141,12 @@ void ExecutePoliceAlert(long currentMillis)
     }
 }
 
-void SetBlinkMode(byte led_id, byte blinkSpeed)
+void SetBlinkMode(byte led_id, byte blinkSpeed, char darkShiftByte)
 {    
+    byte offTimesLonger = (byte)(darkShiftByte - 'A');
+    
+    led_onoff_ratios[led_id] = offTimesLonger;
+    
     alerts[led_id] = blinkSpeed;
 
     if (led_id < 6)
@@ -135,6 +158,8 @@ void SetBlinkMode(byte led_id, byte blinkSpeed)
             
             bitClear(led_states, led_id);
         }
+
+        led_switch_counters[led_id] = 10;
     }
     else
     {
