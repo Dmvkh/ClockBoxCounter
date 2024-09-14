@@ -33,7 +33,7 @@ void ListenSerial()
         }
         
         command_id = Serial.read();
-        char commandData[255];
+        char commandData[255] = {};
         byte dataLen = 0;
 
         bool termReceived = false;
@@ -145,17 +145,35 @@ void LightOff()
     
     lcd.noBacklight();
     
-    counter_clock.clearScreen();
-    counter_number.clearScreen();
-
-    oled.clearDisplay();
+    ClearAll();
 }
 
 void PlaySound(char sound)
 {
     byte dataLen = 1;
     char serialData[dataLen] = { sound, };
+    
     SendSerialCommand(SET_BUZZER_PLAY, serialData, dataLen);
+}
+
+void PlayCustomTone(int playTone, int toneLen)
+{
+    byte dataLen = 8;
+    char serialData[dataLen];
+
+    // Write tone
+    serialData[0] = (char)('0' + byte((playTone % 10000) / 1000));
+    serialData[1] = (char)('0' + byte((playTone % 1000) / 100));
+    serialData[2] = (char)('0' + byte((playTone % 100) / 10));
+    serialData[3] = (char)('0' + byte(playTone % 10));
+
+    // Write duration
+    serialData[4] = (char)('0' + byte((toneLen % 10000) / 1000));
+    serialData[5] = (char)('0' + byte((toneLen % 1000) / 100));
+    serialData[6] = (char)('0' + byte((toneLen % 100) / 10));
+    serialData[7] = (char)('0' + byte(toneLen % 10));
+  
+    SendSerialCommand(PLAY_CUSTOM_TONE, serialData, dataLen);
 }
 
 void SendSerialCommand(char command_id, char* command_data, byte dataLen)
@@ -168,12 +186,8 @@ void SendSerialCommand(char command_id, char* command_data, byte dataLen)
     {
         serialOutput[i + 2] = command_data[i];
     }
-
-    byte randomValue = random(0, 36);
-    char checksum = randomValue > 25 ? ((randomValue - 26) + '0') : (randomValue + 'a');
     
     serialOutput[dataLen + 2] = CHECKSUM_CHAR;
-    serialOutput[dataLen + 3] = checksum;
     serialOutput[dataLen + 4] = TERMINATE_CHAR;
     serialOutput[dataLen + 5] = '\0';
 
@@ -183,6 +197,12 @@ void SendSerialCommand(char command_id, char* command_data, byte dataLen)
     
     while (!checksumVerified)
     {
+        // Regenerate checksum
+        byte randomValue = random(0, 36);
+        char checksum = randomValue > 25 ? ((randomValue - 26) + '0') : (randomValue + 'a');
+        
+        serialOutput[dataLen + 3] = checksum;
+        
         Serial.println(serialOutput);
 
         // Wait for Attiny response if the command is not a ping
@@ -210,11 +230,14 @@ void SendSerialCommand(char command_id, char* command_data, byte dataLen)
             {
                 Serial.printf("Attiny responded with a wrong checksum: ' %s'; Expected: '%s'!\n", receivedCheckSum, checksum);
             }
+
+            // Give Attiny time to clear buffer before next attempt
+            delay(50 + ((dataLen + 6) * 5));
         }
     }
 
     // Clear buffer leftover
-    while (Serial.available() >0 ) 
+    while (Serial.available() > 0) 
     {
        Serial.read();
     }

@@ -2,7 +2,7 @@
 const char* ssid = WIFI_SSID;
 const char* password = WIFI_PASSWORD;
 
-const int taskUpdateIntervalSec = 600;
+const int taskUpdateIntervalSec = 300;
 
 bool updateInit = false;
 bool timeClientStarted = false;
@@ -136,7 +136,7 @@ void UpdateUserTasks()
     {
         CommenceAsyncUpdate();
         
-        UpdateTasksState();
+        UpdateTasksState(currentMillis);
     }
 
     // Restart Wi-Fi connection if connection hasn't been established for too long
@@ -162,7 +162,7 @@ void CommenceAsyncUpdate()
     if (updateInit && wStatus == WL_CONNECTED)
     {        
         Serial.println("WI-FI Connected!");
-        OLED_PrintText("Updating clock", 2);
+        OLED_PrintText("Updating\n  clocks", 2);
         
         if (!timeClientStarted)
         {

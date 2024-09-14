@@ -57,6 +57,7 @@ enum TimeWatch
      TimeWatch_OLEDPrintErase,
      TimeWatch_CancelBtnPress,
      TimeWatch_Demo,
+     TimeWatch_TaskAlertSound,
      WatchersCount,
 };
 
@@ -67,25 +68,28 @@ const char SET_BTN1_PRESS = '4';
 const char SET_SEND_MSG = '5';
 const char PING_ATTINY_SIG = '6';
 const char CHECKSUM_CONFIRM = '7';
+const char PLAY_CUSTOM_TONE = '8';
 
 const char BUZZER_CLICK = '1';
 const char BUZZER_OK = '2';
 const char BUZZER_ERROR = '3';
 const char BUZZER_ALARM_1 = '4';
 const char BUZZER_ALARM_2 = '5';
+const char BUZZER_SMALL_BEEP = '6';
+const char BUZZER_START_MELODY = '7';
 
-const byte BLINK_BLUE = 5;
-const byte BLINK_RED = 4;
-const byte BLINK_GREEN = 3;
+const byte BLINK_BLUE = 0;
+const byte BLINK_RED = 1;
 const byte BLINK_YELLOW = 2;
-const byte BLINK_WHITE = 1;
-const byte BLINK_ORANGE = 0;
+const byte BLINK_GREEN = 3;
+const byte BLINK_WHITE = 4;
+const byte BLINK_ORANGE = 5;
 const byte BLINK_POLICE = 6;
 
 // Function prototypes with optional parameters
 void OLED_PrintText(const char* text = NULL, byte textSize = 3, byte brightness = 50, byte eraseAfterSec = 5);
 void SetLeds(bool led_blue = false, bool led_red = false, bool led_green = false, bool led_yellow = false, bool led_white = false, bool led_orange = false);
-void LCD_WriteString(const char* text, byte xi, byte yi, bool updateLed = true);
+void LCD_WriteString(const char* text, byte xi, byte yi, bool updateLed = true, bool clearLineLeftover = false);
 void PlaySound(char sound = BUZZER_CLICK);
 bool IsTriggerTime(TimeWatch watcher, unsigned long currentMillis, unsigned int tickInterval, bool triggerOnInit = false, bool updateTimeOnTrigger = true);
 void LCD_ScrollText(const char* text, bool continueScroll = true);
@@ -139,6 +143,8 @@ void setup() {
     while (!PingAttiny(false))
     {
     } 
+
+    PlaySound(BUZZER_START_MELODY);
     
     SetLeds(true, true, true, true, true, true); 
     

@@ -72,6 +72,10 @@ void ListenUIInteractions(unsigned long currentMillis, bool allowRestoreInterrup
 
 void UI_BackButtonPressed()
 {
-    TryRestoreInterruptedMenu();            
-    ChangeMenuLevel(true);
+    if (IsMenuActive())
+    {
+        ChangeMenuLevel(true);
+    }
+    
+    TryRestoreInterruptedMenu();
 }

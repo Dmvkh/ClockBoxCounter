@@ -15,7 +15,7 @@ void LedOn()
     LeaveStandBy();
 }
 
-void LCD_WriteString(const char* text, byte xi, byte yi, bool updateLed)
+void LCD_WriteString(const char* text, byte xi, byte yi, bool updateLed, bool clearLineLeftover)
 {    
     if (updateLed)
     {
@@ -23,11 +23,28 @@ void LCD_WriteString(const char* text, byte xi, byte yi, bool updateLed)
     }
     
     lcd.setCursor(xi, yi);
-    
     lcd.print(text);
+    
+    if (clearLineLeftover && strlen(text) < LCD_SCREEN_WIDTH)
+    {
+        for (byte i = 0; i < LCD_SCREEN_WIDTH - strlen(text); ++i)
+        {
+            lcd.print(' ');
+        }
+    }
     
     DeactivateMenu();
 }
+
+void LCD_ClearLine(byte lineNo)
+{    
+    if (lineNo < 4)
+    {
+        lcd.setCursor(0, lineNo);
+        lcd.print("                    ");
+    }
+}
+
 
 void LCD_ShowWelcome()
 {

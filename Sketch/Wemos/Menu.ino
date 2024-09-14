@@ -62,7 +62,7 @@ void DeactivateMenu()
 
 bool IsMenuActive()
 {
-    return isMenuActive;
+    return isMenuActive && !IsMenuInterrupted();
 }
 
 void ResetMenu()
