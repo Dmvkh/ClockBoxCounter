@@ -3,6 +3,9 @@ bool isStandBy = false;
 unsigned long timeWatchers[WatchersCount] = {};
 
 byte demo_counter = 0;
+byte demo_cancellation = 0;
+
+byte cancelledOnToken = 0;
 
 void ProcessScheduler(unsigned long currentMillis)
 {
@@ -19,6 +22,11 @@ void ProcessScheduler(unsigned long currentMillis)
 
     if (demo_counter > 0 && IsTriggerTime(TimeWatch_Demo, currentMillis, 850, 0))
     {
+        if (IsCancelled(demo_cancellation))
+        {
+            demo_counter = 100;
+        }
+
         ProcessDemoStep();
     }
 
@@ -76,41 +84,83 @@ void ScheduleStandby(byte secs)
 
 void DoSoundTest()
 {
-    InterruptMenu(0);
+    InterruptMenu(0);    
     lcd.clear();
-    LCD_WriteString("Playing OK Sound:", 0, 1);
+
+    byte cancellationToken = GetCancelClicks();
+    LCD_WriteString("    !Sound Test!", 0, 1);
     
+    LCD_WriteString("Playing OK Sound:", 0, 2);    
     PlaySound(BUZZER_OK);
+    delay(500);
 
-    delay(500);
-    
-    lcd.clear();
-    LCD_WriteString("Playing Error Sound:", 0, 1);
-    
-    PlaySound(BUZZER_ERROR);
-    
-    delay(500);
-    
-    lcd.clear();
-    LCD_WriteString("Playing Alarm 1", 0, 1);
-    
-    PlaySound(BUZZER_ALARM_1);
-    
-    delay(500);
-    
-    lcd.clear();
-    LCD_WriteString("Playing Alarm 2", 0, 1);
-    
-    PlaySound(BUZZER_ALARM_2);
-    
-    delay(500);
-    lcd.clear();
-    LCD_WriteString("Playing Click Sound:", 0, 1);
-
-    for (byte i = 0; i < 3; ++i)
+    if (!IsCancelled(cancellationToken))
     {
-        PlaySound();
-        delay(100);
+        LCD_WriteString("Playing Error Sound:", 0, 2, true, true);
+        PlaySound(BUZZER_ERROR);    
+        delay(500);
+    }
+    
+    if (!IsCancelled(cancellationToken))
+    {
+        LCD_WriteString("Playing Alarm 1", 0, 2, true, true);    
+        PlaySound(BUZZER_ALARM_1);    
+        delay(500);
+    }
+    
+    if (!IsCancelled(cancellationToken))
+    {
+        LCD_WriteString("Playing Alarm 2", 0, 2, true, true);    
+        PlaySound(BUZZER_ALARM_2);
+        delay(3000);
+    }
+    
+    if (!IsCancelled(cancellationToken))
+    {
+        LCD_WriteString("Playing small buz x3", 0, 2, true, true);
+        
+        for (byte i = 0; i < 3; ++i)
+        {
+            PlaySound(BUZZER_SMALL_BEEP);
+            delay(100);
+        }
+    }
+    
+    if (!IsCancelled(cancellationToken))
+    {
+        LCD_WriteString("Playing custom tones", 0, 2, true, true);    
+        
+        for (byte i = 0; i < 50 && !IsCancelled(cancellationToken); ++i)
+        {
+            PlayCustomTone(100 + (i * 100), 30);
+            delay(10);
+
+            char buf[20];
+            sprintf(buf, "%i/50", (i + 1));
+
+            LCD_WriteString(buf, 7, 3, true, true); 
+        }
+    }
+    
+    if (!IsCancelled(cancellationToken))
+    {
+        LCD_ClearLine(3);
+        LCD_WriteString("Playing Click Sound:", 0, 2, true, true);
+
+        for (byte i = 0; i < 3; ++i)
+        {
+            PlaySound();
+            delay(100);
+        }
+    }
+
+    if (!IsCancelled(cancellationToken))
+    {
+        LCD_ClearLine(3);
+        LCD_WriteString("Playing Start melody", 0, 2, true, true);
+
+        PlaySound(BUZZER_START_MELODY);
+        delay(1500);
     }
     
     TryRestoreInterruptedMenu();
@@ -125,10 +175,11 @@ void DoStartDemo()
     counter_number.clearScreen();
     
     demo_counter = 1;
+    demo_cancellation = GetCancelClicks();
 }
 
 void ProcessDemoStep()
-{
+{    
     if (demo_counter == 1)
     {
         lcd.noBacklight();
@@ -245,12 +296,24 @@ void ProcessDemoStep()
     {   
         PlaySound();
         demo_counter = 0;
+
+        ClearAll();
         
         OLED_ToggleProgress(false);
         TryRestoreInterruptedMenu();
     }
 }
 
+void ClearAll()
+{
+    lcd.clear();
+    counter_clock.clearScreen();
+    counter_number.clearScreen();
+
+    oled.clearDisplay();
+    
+    SetLeds();
+}
 
 bool IsTriggerTime(TimeWatch watcher, unsigned long currentMillis, unsigned int tickInterval, bool triggerOnInit, bool updateTimeOnTrigger)
 {
@@ -282,17 +345,36 @@ unsigned long GetWatcherTime(TimeWatch watcher)
     return timeWatchers[watcher];
 }
 
+bool IsCancelled(byte clicksToCompare)
+{
+    ListenSerial();
+    bool isCancelled = clicksToCompare != GetCancelClicks();
+    
+    if (isCancelled)
+    {
+      if (cancelledOnToken != clicksToCompare)
+      {
+          Serial.println("Operation cancelled by user");
+          PlaySound(BUZZER_ERROR);
+
+          cancelledOnToken = clicksToCompare;
+      }
+    }
+    
+    return isCancelled;
+}
+
 void StartBlinkTest()
 {
     InterruptMenu(0);
     lcd.clear();
     LCD_WriteString("Testing Blinks:", 0, 0);
 
-    byte btnVal = GetCancelClicks();
+    byte cancellationToken = GetCancelClicks();
     long encPos = 100000;
     byte testNo = 0;
     
-    while (btnVal == GetCancelClicks() && testNo < 7)
+    while (!IsCancelled(cancellationToken) == GetCancelClicks() && testNo < 7)
     {        
         if (encPos != GetEncoderPosition())
         {
@@ -312,7 +394,6 @@ void StartBlinkTest()
         }
 
         ListenUIInteractions(millis(), false);
-        ListenSerial();
         delay(100);
     }
     

@@ -73,6 +73,29 @@ void ReadSerial()
     }    
 }
 
+void SendMessage_Serial(char message_id, byte messageSize, char* msg)
+{
+    char serialOutput[messageSize + 4];
+    serialOutput[0] = ATT_ID_CHAR;
+    serialOutput[1] = message_id;
+    
+    for (byte i = 0; i < messageSize; ++i)
+    {
+        serialOutput[i + 2] = msg[i];
+    }
+
+    serialOutput[messageSize + 2] = TERMINATE_CHAR;
+    serialOutput[messageSize + 3] = '\0';
+    
+    portOne.println(serialOutput);
+}
+
+void AnounceStartup()
+{
+    char msg[1] = { '1' };
+    SendMessage_Serial(PING_ATTINY_SIG, 1, msg);
+}
+
 void ExecuteCommand(char command_id, byte dataLen, char* commandData)
 {
     switch (command_id)
@@ -108,26 +131,72 @@ void ExecuteCommand(char command_id, byte dataLen, char* commandData)
 
           if (dataLen == 1)
           {
-              if (commandData[0] == '1')
+              switch (commandData[0])
               {
-                  PlayClick();                  
+                  case '1': // Click
+                    noTone();
+                    tone(buzzer, 800, 5);
+                    break;
+              
+                  case '2': // OK
+                    noTone();
+                    tone(buzzer, 1000, 200);
+                    delay(220);
+                    
+                    noTone();    
+                    tone(buzzer, 1500, 200);
+                    break;
+              
+                  case '3': // Error
+                    noTone();
+                    tone(buzzer, 100, 200);
+                    delay(220);
+                    
+                    noTone();    
+                    tone(buzzer, 100, 200);
+                    break;
+
+                  case '4': // Alarm 1
+                    
+                    noTone();
+                    tone(buzzer, 1000, 100);
+                    tone(buzzer, 2000, 100);
+                    tone(buzzer, 3000, 100);
+                    break;
+
+                  case '5': // Police alarm
+                    
+                    currentMelody = 1;
+                    melodyNote = 0;
+                    
+                    break;
+                  
+                  case '6':  //Short buzz
+                    noTone();
+                    tone(buzzer, 3000, 10);
+                    break;
+
+                  case '7':  // Start Melody
+                    noTone();
+                    
+                    currentMelody = 2;
+                    melodyNote = 0;
+                    
+                    break;
               }
-              else if (commandData[0] == '2')
-              {
-                  PlayOK();
-              }
-              else if (commandData[0] == '3')
-              {
-                  PlayError();
-              }
-              else if (commandData[0] == '4')
-              {
-                  PlayAlert_1();
-              }
-              else if (commandData[0] == '5')
-              {
-                  PlayAlert_2();
-              }
+          }
+          
+          break;
+
+        case PLAY_CUSTOM_TONE:
+          
+          if (dataLen == 8)
+          {
+              int playTone = (byte)(commandData[0] - '0') * 1000 + (byte)(commandData[1] - '0') * 100 + (byte)(commandData[2] - '0') * 10 + (byte)(commandData[3] - '0');
+              int toneLen = (byte)(commandData[4] - '0') * 1000 + (byte)(commandData[5] - '0') * 100 + (byte)(commandData[6] - '0') * 10 + (byte)(commandData[7] - '0');
+          
+              noTone();
+              tone(buzzer, playTone, toneLen);
           }
           
           break;
@@ -142,27 +211,4 @@ void ExecuteCommand(char command_id, byte dataLen, char* commandData)
           
           break;
     }
-}
-
-void SendMessage_Serial(char message_id, byte messageSize, char* msg)
-{
-    char serialOutput[messageSize + 4];
-    serialOutput[0] = ATT_ID_CHAR;
-    serialOutput[1] = message_id;
-    
-    for (byte i = 0; i < messageSize; ++i)
-    {
-        serialOutput[i + 2] = msg[i];
-    }
-
-    serialOutput[messageSize + 2] = TERMINATE_CHAR;
-    serialOutput[messageSize + 3] = '\0';
-    
-    portOne.println(serialOutput);
-}
-
-void AnounceStartup()
-{
-    char msg[1] = { '1' };
-    SendMessage_Serial(PING_ATTINY_SIG, 1, msg);
 }

@@ -24,6 +24,7 @@ const char SET_BTN1_PRESS = '4';
 const char SET_SEND_MSG = '5';
 const char PING_ATTINY_SIG = '6';
 const char CHECKSUM_CONFIRM = '7';
+const char PLAY_CUSTOM_TONE = '8';
 
 void setup() {
     // pins setup
@@ -44,17 +45,21 @@ void setup() {
     AnounceStartup();
 }
 
-long pressMillis = 0;
+unsigned long pressMillis = 0;
+
+byte currentMelody = 0;
+byte melodyNote = 0;
 
 void loop() {
 
-    long currentMillis = millis();
+    unsigned long currentMillis = millis();
     
     ReadSerial();
     DoBlinking(currentMillis);
+    ProcessMelody(currentMillis);
   
     // Button 1 press detected
-    if (digitalRead(pin_btn) == HIGH && (currentMillis < pressMillis || pressMillis < currentMillis - 500))
+    if (digitalRead(pin_btn) == HIGH && (currentMillis < pressMillis || pressMillis + 500 < currentMillis))
     {
         pressMillis = currentMillis;
   

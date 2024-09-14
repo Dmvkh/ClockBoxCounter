@@ -11,48 +11,37 @@ byte rb_step = 0;
 long rb_millis = 0;
 long warning_updates[6] = { 0, 0, 0, 0, 0, 0, };
 
-
-void DoBlinking(long currentMillis)
+void DoBlinking(unsigned long currentMillis)
 {    
-    ExecutePoliceAlert(currentMillis);
-    ExecuteBlinking(currentMillis);
-}
-
-byte GetLedPin(byte led_no)
-{
-    byte led_pin;
-    switch (led_no)
-    {
-        case 0:
-          led_pin = led_Blue;
-          break;
-          
-        case 1:
-          led_pin = led_Red;
-          break;
-          
-        case 2:
-          led_pin = led_Yellow;
-          break;
-          
-        case 3:
-          led_pin = led_Green;
-          break;
-          
-        case 4:
-          led_pin = led_White;
-          break;
-  
-        default:
-          led_pin = led_Orange;
-          break;
+    // Police Alert Led Blinking
+    if (alerts[6] > 0)
+    {        
+        if (rb_millis > currentMillis || rb_millis + (5 * alerts[6]) < currentMillis)
+        {
+            rb_millis = currentMillis;
+            
+            if (rb_step < 7 || rb_step > 8)
+            {
+                if (rb_step % 2 == 0)
+                {
+                    digitalWrite(rb_step % 4 == 0 ? led_Blue : led_Red, HIGH);                  
+                }
+                else
+                {
+                    digitalWrite(led_Blue, LOW);
+                    digitalWrite(led_Red, LOW);
+                }
+            }
+            
+            rb_step++;
+            if (rb_step > 14)
+            {
+                rb_step = 0;
+            }
+        }
     }
 
-    return led_pin;
-}
-
-void ExecuteBlinking(long currentMillis)
-{
+    // Police blinking
     for (byte i = 0; i < leds_total; ++i)
     {
         bool canBlink = false;
@@ -110,35 +99,37 @@ void ExecuteBlinking(long currentMillis)
     }
 }
 
-// Police Alert Led Blinking
-void ExecutePoliceAlert(long currentMillis)
+byte GetLedPin(byte led_no)
 {
-    if (alerts[6] > 0)
-    {        
-        if (rb_millis > currentMillis || rb_millis < currentMillis - (5 * alerts[6]))
-        {
-            rb_millis = currentMillis;
-            
-            if (rb_step < 7 || rb_step > 8)
-            {
-                if (rb_step % 2 == 0)
-                {
-                    digitalWrite(rb_step % 4 == 0 ? led_Blue : led_Red, HIGH);                  
-                }
-                else
-                {
-                    digitalWrite(led_Blue, LOW);
-                    digitalWrite(led_Red, LOW);
-                }
-            }
-            
-            rb_step++;
-            if (rb_step > 14)
-            {
-                rb_step = 0;
-            }
-        }
+    byte led_pin;
+    switch (led_no)
+    {
+        case 0:
+          led_pin = led_Blue;
+          break;
+          
+        case 1:
+          led_pin = led_Red;
+          break;
+          
+        case 2:
+          led_pin = led_Yellow;
+          break;
+          
+        case 3:
+          led_pin = led_Green;
+          break;
+          
+        case 4:
+          led_pin = led_White;
+          break;
+  
+        default:
+          led_pin = led_Orange;
+          break;
     }
+
+    return led_pin;
 }
 
 void SetBlinkMode(byte led_id, byte blinkSpeed, char darkShiftByte)
