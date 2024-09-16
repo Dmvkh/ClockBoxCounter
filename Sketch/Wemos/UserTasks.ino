@@ -1,6 +1,9 @@
 const byte maxTasks = 6;
 
 char description[99][255]; // Descriptions can contain more than 6 tasks
+byte task_users[255]; // assigned user id
+byte task_prlv[255]; // task priority level
+
 byte ledBlink[maxTasks];
 byte blinkSpeed[maxTasks];
 byte blinkShiftOnOff[maxTasks]; // 0-9 longer 'on', 10 - even, > 10 longer 'off'
@@ -47,9 +50,12 @@ void DownloadTasks()
 
                 for (byte i = 0; i < min((byte)99, currentTasks); ++i)
                 {
-                    strncpy(description[i], tasks_list["all_tasks"][i]["DESCRIPTION"], 255);
+                    strncpy(description[i], tasks_list["all_tasks"][i]["DESCRIPTION"], min((size_t)255, strlen(tasks_list["all_tasks"][i]["DESCRIPTION"])));
 
-                    switch ((int)tasks_list["all_tasks"][i]["PRIORITY_LEVEL"])
+                    task_users[i] = tasks_list["all_tasks"][i]["USER_ID"] == NULL ? 255 : (byte)tasks_list["all_tasks"][i]["USER_ID"];
+                    task_prlv[i] = (byte)tasks_list["all_tasks"][i]["PRIORITY_LEVEL"];
+
+                    switch (task_prlv[i])
                     { 
                       case  1: // Low
                           
@@ -107,11 +113,6 @@ void DownloadTasks()
     {
         Serial.println("[HTTP] Unable to connect");
     }
-    
-    /*currentTasks = 1;
-    strcpy(description[0], "Task Example police blink");
-    ledBlink[0] = BLINK_POLICE;
-    blinkSpeed[0] = 10;*/
 
     if (currentTasks > 0)
     {
@@ -138,6 +139,10 @@ void DownloadTasks()
     else
     {
         Serial.println("No active tasks have been found.");
+        
+        // Turn blinking off
+        SetLeds();
+        counter_number.clearScreen();
     }
 }
 
@@ -194,23 +199,52 @@ void UpdateTasksState(unsigned long currentMillis)
                 }
             }
         }
-        else
-        {
-            // Turn blinking off
-            SetLeds();
-            counter_number.clearScreen();
-        }
     }
 }
 
 void GetUserTasks(byte user_id, byte& optionsSize, char options[255][LCD_SCREEN_WIDTH - 2])
 {
-    optionsSize = 3;
+    optionsSize = 0;
     
-    for (byte i = 0; i < 3; ++i)
+    if (currentTasks > 0)
     {
-        strcpy(options[i], "Option ");
-        char no[2] = { (char)('0' + i), '\0' };
-        strcat(options[i], no);
+        for (byte i = 0; i < currentTasks; ++i)
+        {
+            if (task_users[i] == 255 || task_users[i] == user_id)
+            {                
+                char uChar = task_users[optionsSize] == 255 ? '?' : '+';
+                
+                snprintf(options[optionsSize], LCD_SCREEN_WIDTH - 2, "[%c] Task #%i [L:%i]", uChar, (optionsSize + 1), task_prlv[optionsSize]);
+                
+                optionsSize++;
+            }
+        }
     }
+    
+    if (optionsSize == 0)
+    {
+        optionsSize = 1;
+        strcpy(options[0], "No current tasks...");
+    }
+}
+
+const char* GetTaskDescription(byte user_id, byte taskNo)
+{
+    byte taskId = 0;
+    byte taskCnt = 0;
+    
+    for (byte i = 0; i < currentTasks; ++i)
+    {
+        if (task_users[i] == 255 || task_users[i] == user_id)
+        {             
+            if (taskNo == i)
+            {
+                taskId = i;
+            }
+            
+            taskCnt++;
+        }
+    }
+
+    return description[taskId];
 }

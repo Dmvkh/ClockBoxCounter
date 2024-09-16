@@ -49,7 +49,9 @@ void EnterStandBy()
 {
     Serial.println("Entering standby!");
     OLED_Clear();
-
+    
+    ToggleMenuInterruptionRestore(true);
+    
     counter_clock.setBrightnessPercent(5);
     counter_number.setBrightnessPercent(5);
     
@@ -352,13 +354,13 @@ bool IsCancelled(byte clicksToCompare)
     
     if (isCancelled)
     {
-      if (cancelledOnToken != clicksToCompare)
-      {
-          Serial.println("Operation cancelled by user");
-          PlaySound(BUZZER_ERROR);
-
-          cancelledOnToken = clicksToCompare;
-      }
+        if (cancelledOnToken != clicksToCompare)
+        {
+            Serial.println("Operation cancelled by user");
+            PlaySound(BUZZER_ERROR);
+  
+            cancelledOnToken = clicksToCompare;
+        }
     }
     
     return isCancelled;
@@ -373,8 +375,10 @@ void StartBlinkTest()
     byte cancellationToken = GetCancelClicks();
     long encPos = 100000;
     byte testNo = 0;
+
+    ToggleMenuInterruptionRestore(false);
     
-    while (!IsCancelled(cancellationToken) == GetCancelClicks() && testNo < 7)
+    while (!IsCancelled(cancellationToken) && testNo < 7)
     {        
         if (encPos != GetEncoderPosition())
         {
@@ -393,11 +397,12 @@ void StartBlinkTest()
             testNo++;
         }
 
-        ListenUIInteractions(millis(), false);
+        ListenUIInteractions(millis());
         delay(100);
     }
-    
-    Serial.printf("Test ended #%i\n", testNo);
+
+    ToggleMenuInterruptionRestore(true);
+    Serial.println("Blinking Test ended");
     
     SetLeds();
     TryRestoreInterruptedMenu();

@@ -51,7 +51,6 @@ void ReadRadioSignal()
     if (radioSwitch.available()) 
     {
         long radioSignal = radioSwitch.getReceivedValue();
-        radioSwitch.resetAvailable();
 
         // That could be some random noise, which should be ignored
         if (radioSignal < 1000)
@@ -115,6 +114,10 @@ void ReadRadioSignal()
             delay(200);
             SetBlinking(blinkLed, 0);
         }
+
+        // Get some time to eliminate continuous button pressing trigger
+        delay(500);
+        radioSwitch.resetAvailable();
     }
 }
 

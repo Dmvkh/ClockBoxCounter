@@ -8,7 +8,7 @@ const char* MainMenuOptions[mainMenuItemsCount] = {
 };
 
 const byte usersTotal = 4;
-const char* consoleUsers[usersTotal] = { "Dad", "Max", "Fox", "Mom", };
+const char* consoleUsers[usersTotal] = { "Dad", "Mom", "Max", "Fox", };
 const byte consoleButtons = 4;
 
 char options[255][LCD_SCREEN_WIDTH - 2] = {};
@@ -120,8 +120,8 @@ void ChangeMenuLevel(bool goUp)
     {
         if (goUp)
         {
+            activeItem = selItems[currentMenuLevel - 1];
             selItems[currentMenuLevel - 1] = 255;
-            activeItem = 0;
         }
         else
         {
@@ -132,8 +132,8 @@ void ChangeMenuLevel(bool goUp)
     {
         if (goUp)
         {
+            activeItem = selItems[currentMenuLevel - 1];
             selItems[currentMenuLevel - 1] = 255;
-            activeItem = 0;
         }
         else if (CanEnterSubmenu())
         {
@@ -185,6 +185,8 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
     
     // Clear options
     memset(options, 0, sizeof(options));
+    
+    Serial.printf("ML: %i, AI: %i\n", menuLevel, activeItem);
     
     // Main menu
     switch (menuLevel)
@@ -249,7 +251,7 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
         
                 // Show user tasks
                 case 2:
-        
+                  
                   GetUserTasks(activeItem, optionsSize, options);
         
                   break;
@@ -344,6 +346,15 @@ void ExecuteCurrentMenuItem()
                       int signalCode = GetConsoleCode(selItems[1], activeItem);
                       SendSignal(signalCode);
                   }
+
+                // Print task description
+                case 2:
+                
+                    Serial.printf("Show description for user %i, Task %i\n", selItems[1], activeItem);
+                    const char* taskDescription = GetTaskDescription(selItems[1], activeItem);
+                    LCD_WriteScrollableText(taskDescription);
+                    
+                    break;
             }
       
             break;

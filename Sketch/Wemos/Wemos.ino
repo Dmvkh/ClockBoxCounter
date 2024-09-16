@@ -20,6 +20,8 @@
 #define LCD_SCREEN_WIDTH 20 // OLED display width, in pixels
 #define LCD_SCREEN_HEIGHT 4 // OLED display height, in pixels
 
+#define ENCODER_INCREMENT 2 // Encoder position change increment may vary from model to model
+
 const byte wheel_press = A0;
 
 // UTC time offset, defined elsewhere
@@ -94,7 +96,6 @@ void PlaySound(char sound = BUZZER_CLICK);
 bool IsTriggerTime(TimeWatch watcher, unsigned long currentMillis, unsigned int tickInterval, bool triggerOnInit = false, bool updateTimeOnTrigger = true);
 void LCD_ScrollText(const char* text, bool continueScroll = true);
 void SetBlinking(byte blink_mode, int blinkSpeed, byte offTimesLonger = 10);
-void ListenUIInteractions(unsigned long currentMillis, bool allowRestoreInterruptedMenu = true);
 
 void DrawMenuOptions(byte optionsSize, char options[255][LCD_SCREEN_WIDTH - 2], byte activeItem);
 void GetUserTasks(byte user_id, byte& optionsSize, char options[255][LCD_SCREEN_WIDTH - 2]);
