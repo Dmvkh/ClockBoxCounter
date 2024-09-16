@@ -1,5 +1,6 @@
 long encOldPosition  = 0;
 bool isUIActivated = false;
+bool allowRestoreInterruptedMenu = true;
 
 void InitEncoder()
 {
@@ -16,7 +17,12 @@ bool IsUIActivated()
     return isUIActivated;
 }
 
-void ListenUIInteractions(unsigned long currentMillis, bool allowRestoreInterruptedMenu)
+void ToggleMenuInterruptionRestore(bool allowMenuInterruptionRestore)
+{
+    allowRestoreInterruptedMenu = allowMenuInterruptionRestore;
+}
+
+void ListenUIInteractions(unsigned long currentMillis)
 {    
     // Interrupts of rotary encoder break Wi-Fi connection sequence!
     if (IsConnectingToWiFi())
@@ -43,7 +49,14 @@ void ListenUIInteractions(unsigned long currentMillis, bool allowRestoreInterrup
             }
             else
             {
-                ShowMenu();
+                if (allowRestoreInterruptedMenu)
+                {
+                    ShowMenu();
+                }
+                else
+                {
+                    LCD_TryScrollLongText(encCurrentPosition);
+                }
             }
 
             encOldPosition = encCurrentPosition;
@@ -76,6 +89,8 @@ void UI_BackButtonPressed()
     {
         ChangeMenuLevel(true);
     }
+
+    LCD_TryExitTextScrollMode();
     
     TryRestoreInterruptedMenu();
 }

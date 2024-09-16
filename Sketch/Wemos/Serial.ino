@@ -225,6 +225,13 @@ void SendSerialCommand(char command_id, char* command_data, byte dataLen)
             if (receivedCheckSum == CHECKSUMM_ERR)
             {
                 Serial.println("Attiny didn't respond to serial command. Repeating request!");
+
+                // Clear buffer leftover
+                delay(100);
+                while (Serial.available() > 0) 
+                {
+                   Serial.read();
+                }
             }
             else
             {
