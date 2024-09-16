@@ -142,15 +142,15 @@ Push-up buttons, ultra-bright 3mm LEDs, breadboard, electronic components (diode
 - [x] Add OLED display text printing routine
   - [x] Add auto closing pop-up messages
   - [x] Add progress bar for long running processes  
-- [ ] Add user tasks dowloading via web-server API **IN PROGRESS**
+- [x] Add user tasks dowloading via web-server API
    - [x] Add new tasks counter indicator in Standby mode
    - [x] Add task signals manifestatation (blinking/sounds) in Standby mode
-   - [ ] Add new tasks download from Web-server API **TODO**
+   - [x] Add new tasks download from Web-server API
 - [ ] Implement RF 433 MHz protocol communication **IN PROGRESS**
   - [x] Add RF reading for detecting users and distinguish remote buttons pressed
   - [x] Add generating and transmitting RF signal for choosen user via Menu for remote programming
   - [ ] Add interaction with downloaded tasks via RF remote **TODO**
 
 #### - LAN web server API
-- [ ] Add Web-Server API for individual user tasks **TODO**
-  - [ ] Add tasks create/update interface for individual users **TODO**
+- [x] Add Web-Server API for individual user tasks
+  - [x] Add tasks create/update interface for individual users
