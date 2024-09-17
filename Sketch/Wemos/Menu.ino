@@ -1,4 +1,6 @@
 const byte mainMenuItemsCount = 5;
+const byte menuDepth = 4;
+
 const char* MainMenuOptions[mainMenuItemsCount] = {
   "Assign RF buttons",
   "Update tasks",
@@ -7,15 +9,14 @@ const char* MainMenuOptions[mainMenuItemsCount] = {
   "Stand By"
 };
 
-const byte usersTotal = 4;
-const char* consoleUsers[usersTotal] = { "Dad", "Mom", "Max", "Fox", };
+const char* consoleUsers[USERS_TOTAL] = { "Dad", "Mom", "Max", "Fox", };
 const byte consoleButtons = 4;
 
 char options[255][LCD_SCREEN_WIDTH - 2] = {};
 
 byte interruptRestoreTimeoutSecs = 30;
 
-byte selItems[3] = { 255, 255, 255 };
+byte selItems[menuDepth] = { 255, 255, 255, 255 };
 byte activeItem = 0;
 
 bool isMenuActive = false;
@@ -55,6 +56,18 @@ void TryRestoreInterruptedMenu()
     }
 }
 
+const char* GetUserName(byte user_id)
+{
+    if (user_id < USERS_TOTAL)
+    {
+        return consoleUsers[user_id];
+    }
+    else
+    {
+        return "";
+    }
+}
+
 void DeactivateMenu()
 {
     isMenuActive = false;
@@ -69,7 +82,7 @@ void ResetMenu()
 {
     for (byte i = 0; i < sizeof(selItems) / sizeof(byte); ++i)
     {
-      selItems[i] = 255;
+        selItems[i] = 255;
     }
     
     activeItem = 0;
@@ -106,7 +119,6 @@ void UpdateActiveItem(bool increase)
 void ChangeMenuLevel(bool goUp)
 {
     byte currentMenuLevel = GetCurrentMenuLevel();
-    byte menuDepth = sizeof(selItems) / sizeof(byte);
   
     if (currentMenuLevel == 0)
     {
@@ -168,6 +180,7 @@ void ShowMenu()
     byte currentMenuLevel = GetCurrentMenuLevel();    
     byte levelToCheck = currentMenuLevel == 0 ? 255 : (currentMenuLevel - 1);
     
+    //Serial.printf("drawing menu L:%i S:%i OS:%i\n", levelToCheck, selItems[levelToCheck], optionsSize);
     GetSubmenuOptions(levelToCheck, selItems[levelToCheck], optionsSize);
     
     if (optionsSize > 0)
@@ -186,7 +199,7 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
     // Clear options
     memset(options, 0, sizeof(options));
     
-    Serial.printf("ML: %i, AI: %i\n", menuLevel, activeItem);
+    //Serial.printf("Loading options for MenuLevel: %i. SI1: %i; SI2: %i; SI3: %i\n", menuLevel, selItems[0], selItems[1], selItems[2]);
     
     // Main menu
     switch (menuLevel)
@@ -201,7 +214,7 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
                 // When showing tasks menus
                 case 2:
                 
-                    optionsSize = usersTotal;
+                    optionsSize = USERS_TOTAL;
                     for (byte i = 0; i < optionsSize; ++i)
                     {
                         memcpy(options[i], consoleUsers[i], min(sizeof(options[i]), strlen(consoleUsers[i])));
@@ -252,13 +265,30 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
                 // Show user tasks
                 case 2:
                   
-                  GetUserTasks(activeItem, optionsSize, options);
+                  GetUserTasks(selItems[1], optionsSize, options);
         
                   break;
             }
       
             break;
-
+        
+        case 2:
+ 
+            switch (selItems[0])
+            {
+                // Show user task options
+                case 2:
+                   
+                    optionsSize = 3;
+                    strcpy(options[0], "Show description");
+                    strcpy(options[1], "Show task info");
+                    strcpy(options[2], "Accept this task!");
+                    
+                    break;
+            }
+            
+            break;
+            
         case 255:
         
             optionsSize = mainMenuItemsCount;
@@ -275,7 +305,8 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
 void ExecuteCurrentMenuItem()
 {
     byte menuLevel = GetCurrentMenuLevel();
-  
+    //Serial.printf("Executing options for MenuLevel: %i; ActiveItem: %i; SI1: %i; SI2: %i; SI3: %i SI4: %i\n", menuLevel, activeItem, selItems[0], selItems[1], selItems[2], selItems[3]);
+    
     switch (menuLevel)
     {
         case 0:
@@ -346,17 +377,48 @@ void ExecuteCurrentMenuItem()
                       int signalCode = GetConsoleCode(selItems[1], activeItem);
                       SendSignal(signalCode);
                   }
-
-                // Print task description
-                case 2:
-                
-                    Serial.printf("Show description for user %i, Task %i\n", selItems[1], activeItem);
-                    const char* taskDescription = GetTaskDescription(selItems[1], activeItem);
-                    LCD_WriteScrollableText(taskDescription);
-                    
-                    break;
             }
       
+            break;
+
+         case 3:
+            switch (selItems[0])
+            {
+                // Show user task selected
+                case 2:
+                    const char* taskDescription;
+                    const char* taskInfo;
+                    
+                    switch (activeItem)
+                    {
+                        // Print task description
+                        case 0:
+
+                            taskDescription = GetTaskDescription(selItems[1], selItems[2]);
+        
+                            if (taskDescription != "")
+                            {
+                                LCD_WriteScrollableText(taskDescription);
+                            }
+  
+                            break;
+
+                        // Print task info
+                        case 1:
+
+                            taskInfo = GetTaskInfo(selItems[1], selItems[2]);
+        
+                            if (taskInfo != "")
+                            {
+                                LCD_WriteScrollableText(taskInfo);
+                            }
+  
+                            break;
+                    }
+                    
+                    break;                    
+            }
+            
             break;
     }
 }
