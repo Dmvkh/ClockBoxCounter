@@ -69,7 +69,7 @@ void ReadRadioSignal()
         LCD_WriteString("Received RF code!", 0, 0);
         
         // Unknown signal
-        if (signal_data[0] == -1 || signal_data[0] > usersTotal - 1 || signal_data[1] == -1 || signal_data[1] > consoleButtons - 1)
+        if (signal_data[0] == -1 || signal_data[0] > USERS_TOTAL - 1 || signal_data[1] == -1 || signal_data[1] > consoleButtons - 1)
         {
             // Don't stay awake for too long if bad signal is received in standby mode
             if (isReceivedInStandBy)

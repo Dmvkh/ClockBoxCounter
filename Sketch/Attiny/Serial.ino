@@ -69,7 +69,10 @@ void ReadSerial()
         while (portOne.available() > 0) 
         {
            portOne.read();
+           delay(10);
         }
+
+        delay(10);
     }    
 }
 

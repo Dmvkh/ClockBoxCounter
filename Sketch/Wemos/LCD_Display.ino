@@ -3,6 +3,7 @@ char scrollBuffer[LCD_SCREEN_HEIGHT][LCD_SCREEN_WIDTH - 2] = {};
 char longTextToScroll[255];
 long longtextLineEncoderStartPos = 0;
 bool longTextScrollMode = false;
+byte longTextTopLine = 0;
 
 void LCD_CheckStandBy(unsigned long currentMillis)
 {
@@ -28,10 +29,28 @@ void LCD_WriteScrollableText(const char* longText)
 
     // Reset long text buffer
     longtextLineEncoderStartPos = GetEncoderPosition();
+    longTextTopLine = 0;
     memset(longTextToScroll, 0, sizeof(longTextToScroll));
-        
-    strncpy(longTextToScroll, longText, min(strlen(longText), (size_t)255));
-    
+
+    byte cursorPos = 0;
+    for (byte i = 0; cursorPos < 255 && i < strlen(longText); ++i)
+    {
+        if (longText[i] == '\n')
+        {
+            byte charsLeft = LCD_SCREEN_WIDTH - cursorPos % LCD_SCREEN_WIDTH;
+            for (byte k = 0; k < charsLeft; ++k)
+            {
+                longTextToScroll[cursorPos] = ' ';
+                cursorPos++;
+            }            
+        }
+        else
+        {
+            longTextToScroll[cursorPos] = longText[i];
+            cursorPos++;
+        }
+    }
+
     byte sk = 0;
     for (byte i = 0; i < LCD_SCREEN_HEIGHT; ++ i)
     {
@@ -58,21 +77,22 @@ void LCD_TryScrollLongText(long encCurrentPosition)
         LedOn();
         lcd.clear();
         
-        byte lineDiff = (byte)min(255 / LCD_SCREEN_WIDTH, max(0, (int)(encCurrentPosition - longtextLineEncoderStartPos) / ENCODER_INCREMENT));
+        longTextTopLine = encCurrentPosition > longtextLineEncoderStartPos ? longTextTopLine + 1 : (longTextTopLine > 0 ? longTextTopLine - 1 : longTextTopLine);
+        longtextLineEncoderStartPos = encCurrentPosition;
+        
+        byte cSkip = longTextTopLine * LCD_SCREEN_WIDTH;
 
-        if (lineDiff == 0)
+        if (cSkip >= strlen(longTextToScroll))
         {
-            // Reposition start encoder line to avoid no-yield scrolling up
-            longtextLineEncoderStartPos = encCurrentPosition;
+            cSkip = 0;
         }
         
-        byte cSkip = lineDiff * LCD_SCREEN_WIDTH;
         byte copyLen = min((size_t)(LCD_SCREEN_WIDTH * LCD_SCREEN_HEIGHT), strlen(longTextToScroll) - cSkip);
 
         if (copyLen < LCD_SCREEN_WIDTH)
         {
-            // Reposition start encoder line to avoid no-yield scrolling down
-            longtextLineEncoderStartPos = longtextLineEncoderStartPos + ENCODER_INCREMENT;
+            // Avoid infinite downscroll
+            longTextTopLine--;
         }
         
         byte sk = 0;

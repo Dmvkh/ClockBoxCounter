@@ -20,7 +20,7 @@
 #define LCD_SCREEN_WIDTH 20 // OLED display width, in pixels
 #define LCD_SCREEN_HEIGHT 4 // OLED display height, in pixels
 
-#define ENCODER_INCREMENT 2 // Encoder position change increment may vary from model to model
+#define USERS_TOTAL 4
 
 const byte wheel_press = A0;
 
@@ -133,9 +133,6 @@ void setup() {
     counter_clock.display(88.88);
     counter_number.display(88.88);
 
-    radioSwitch.enableTransmit(D6);
-    radioSwitch.enableReceive(D5);
-
     lcd.backlight();
       
     InitEncoder();
@@ -145,7 +142,7 @@ void setup() {
     {
     } 
 
-    PlaySound(BUZZER_START_MELODY);
+    //PlaySound(BUZZER_START_MELODY);
     
     SetLeds(true, true, true, true, true, true); 
     
@@ -158,6 +155,10 @@ void setup() {
     {
         ShowConnectLogo();
     }
+    
+    radioSwitch.enableTransmit(D6);
+    radioSwitch.enableReceive(D5);
+    radioSwitch.resetAvailable();
 }
 
 void loop() {
