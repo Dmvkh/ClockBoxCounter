@@ -23,6 +23,7 @@ bool isMenuActive = false;
 bool canRedrawMenu = true;
 
 bool isMenuInterrupted = false;
+byte activeUserMenu = 255;
 
 void CheckMenuInterruption(long currentMillis)
 {
@@ -35,6 +36,31 @@ void CheckMenuInterruption(long currentMillis)
 bool IsMenuInterrupted()
 {
     return isMenuInterrupted;
+}
+
+byte GetActiveUserMenuId()
+{
+    return activeUserMenu;
+}
+
+void SelectMenuItem (byte num, ...)
+{
+    LedOn();
+    TryRestoreInterruptedMenu();
+    
+    va_list arguments;
+    va_start (arguments, num);
+
+    activeItem = va_arg(arguments, int);
+    for (byte i = 1; i < num; ++i)
+    {
+        selItems[i - 1] = va_arg(arguments, int);
+    }
+    
+    va_end (arguments);
+
+    canRedrawMenu = true;
+    ShowMenu();
 }
 
 // 0 - Unlimited interruption until manually restored
@@ -84,7 +110,8 @@ void ResetMenu()
     {
         selItems[i] = 255;
     }
-    
+
+    activeUserMenu = 255;
     activeItem = 0;
     isMenuActive = false;
     canRedrawMenu = true;
@@ -190,6 +217,43 @@ void ShowMenu()
   
     canRedrawMenu = false;
     isMenuActive = true;
+
+    BrightMenuLeds();
+    UpdateMenuOLED();
+}
+
+void BrightMenuLeds()
+{    
+    activeUserMenu = 255;
+    
+    // User menu shown
+    if (selItems[0] == 2 && selItems[1] < USERS_TOTAL)
+    {
+        activeUserMenu = selItems[1];
+        
+        byte user_led = GetUserLed(selItems[1]);
+        
+        byte leds_data = 0;
+        bitSet(leds_data, user_led);
+        
+        SetLeds(leds_data);
+    }
+    else
+    {
+        SetLeds();
+    }
+}
+
+void UpdateMenuOLED()
+{
+    if (selItems[0] == 2 && selItems[1] < USERS_TOTAL)
+    {
+        OLED_PrintText(consoleUsers[selItems[1]]);
+    }
+    else
+    {
+        OLED_Clear();
+    }
 }
 
 void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
@@ -225,10 +289,11 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
                 // Show settings menu
                 case 3:
                 
-                    optionsSize = 3;
-                    strcpy(options[0], "Sound test");
-                    strcpy(options[1], "Launch demo");
+                    optionsSize = 4;
+                    strcpy(options[0], "Launch demo");
+                    strcpy(options[1], "Sound test");
                     strcpy(options[2], "Blink test");
+                    strcpy(options[3], "RF buttons test");
           
                     break;
             }
@@ -246,18 +311,10 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
         
                   for (int i = 0; i < consoleButtons; ++i)
                   {
-                      memcpy(options[i], consoleUsers[selectedItem], min(strlen(consoleUsers[selectedItem]), size_t(LCD_SCREEN_WIDTH - 12)));
-                      strcat(options[i], " ");
-                      strcat(options[i], " -> Button ");
-
-                      byte optLen = strlen(consoleUsers[selectedItem]) + 12;
-
-                      char ichar[3] = {};
-                      itoa(i, ichar, 10);
-                      for (byte k = 0; k < LCD_SCREEN_WIDTH - optLen; ++k)
-                      {
-                          options[i][optLen + k] = ichar[k];
-                      }
+                      char uName[4];
+                      memset(uName, ' ', sizeof(uName));
+                      strncpy(uName, consoleUsers[selectedItem], sizeof(uName));
+                      snprintf(options[i], LCD_SCREEN_WIDTH - 2, "%s -> Button %i", uName, i + 1);
                   }
         
                   break;
@@ -337,17 +394,17 @@ void ExecuteCurrentMenuItem()
                   
                   switch (activeItem)
                   {
-                      // Sound test
+                      // Play Demo
                       case 0:
 
-                          DoSoundTest();
+                          DoStartDemo();
                           
                           break;
-
-                      // Play Demo
+                          
+                      // Sound test
                       case 1:
 
-                          DoStartDemo();
+                          DoSoundTest();
                           
                           break;
 
@@ -355,6 +412,13 @@ void ExecuteCurrentMenuItem()
                       case 2:
 
                           StartBlinkTest();
+                          
+                          break;
+
+                      // RF buttons test
+                      case 3:
+                          
+                          ToggleRFTestMode(true);
                           
                           break;
                   }

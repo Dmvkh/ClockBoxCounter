@@ -37,7 +37,7 @@ void OLED_PrintText(const char* text, byte textSize, byte brightness, byte erase
 {
     oled.clearDisplay();
     oled.dim(brightness);
-    
+
     if (text != NULL)
     {
         int16_t x1, y1;
@@ -67,9 +67,9 @@ void OLED_PrintText(const char* text, byte textSize, byte brightness, byte erase
 
 void OLED_ScrollMessage(unsigned long currentMillis)
 {  
-  if (scroll_message == "")
+  if (strlen(scroll_message) == 0)
   {
-    return;
+      return;
   }
   
   if (IsTriggerTime(TimeWatch_OLEDScroll, currentMillis, scroll_speed))

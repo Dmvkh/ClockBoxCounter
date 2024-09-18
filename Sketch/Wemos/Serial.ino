@@ -100,40 +100,40 @@ void ListenSerial()
 }
 
 // offTimesLonger 0-10 light longer, 10 - even, > 10 darkness longer
-void SetBlinking(byte blink_mode, int blinkSpeed, byte offTimesLonger)
+void SetBlinking(byte blink_mode, int blinkSpeed, byte blinkLimit, byte offTimesLonger)
 {
     byte s1 = byte((blinkSpeed % 1000) / 100);
     byte s2 = byte((blinkSpeed % 100) / 10);
     byte s3 = byte(blinkSpeed % 10);
 
     char darkByte = 'A' + offTimesLonger;
-    
-    byte dataLen = 5;
+
+    byte l1 = byte((blinkLimit % 1000) / 100);
+    byte l2 = byte((blinkLimit % 100) / 10);
+    byte l3 = byte(blinkLimit % 10);
+
+    byte dataLen = 8;
     char serialData[dataLen] = { 
       (char)('0' + blink_mode),
       (char)('0' + s1),
       (char)('0' + s2),
       (char)('0' + s3),
       darkByte,
+      (char)('0' + l1),
+      (char)('0' + l2),
+      (char)('0' + l3),
     };
     
     SendSerialCommand(SET_BLINK_MODE, serialData, dataLen);
 }
 
-void SetLeds(bool led_blue, bool led_red, bool led_green, bool led_yellow, bool led_white, bool led_orange)
-{    
+void SetLeds(byte leds_state)
+{
     char serialData[blink_modes_total];
 
-    serialData[0] = led_blue ? '1' : '0';
-    serialData[1] = led_red ? '1' : '0';
-    serialData[2] = led_green ? '1' : '0';
-    serialData[3] = led_yellow ? '1' : '0';
-    serialData[4] = led_white ? '1' : '0';
-    serialData[5] = led_orange ? '1' : '0';
-
-    for (byte i = 6; i < blink_modes_total; ++i)
+    for (byte i = 0; i < min((byte)8, blink_modes_total); ++i)
     {
-        serialData[i] = '0';
+        serialData[i] = bitRead(leds_state, i) ? '1' : '0';
     }
     
     SendSerialCommand(SET_LEDS_MODE, serialData, blink_modes_total);

@@ -17,6 +17,11 @@ bool IsUIActivated()
     return isUIActivated;
 }
 
+void ActivateUI()
+{
+    isUIActivated = true;
+}
+
 void ToggleMenuInterruptionRestore(bool allowMenuInterruptionRestore)
 {
     allowRestoreInterruptedMenu = allowMenuInterruptionRestore;
@@ -36,50 +41,61 @@ void ListenUIInteractions(unsigned long currentMillis)
     {   
         if (encCurrentPosition > encOldPosition + 1 || encCurrentPosition < encOldPosition - 1)
         {
-            if (allowRestoreInterruptedMenu)
-            {
-                TryRestoreInterruptedMenu();
-            }
-            
-            isUIActivated = true;
-            
-            if (IsMenuActive())
-            {
-                UpdateActiveItem(encOldPosition < encCurrentPosition);
-            }
-            else
-            {
-                if (allowRestoreInterruptedMenu)
-                {
-                    ShowMenu();
-                }
-                else
-                {
-                    LCD_TryScrollLongText(encCurrentPosition);
-                }
-            }
-
-            encOldPosition = encCurrentPosition;
+            UI_Scroll(encCurrentPosition);
         }
     }
     
     if (analogRead(wheel_press) < 100 && IsTriggerTime(TimeWatch_CancelBtnPress, currentMillis, 500))
     {
-        isUIActivated = true;
-        
+        UI_ForwardButtonPressed();
+    }
+}
+
+void UI_Scroll(long encNewPosition)
+{
+    if (allowRestoreInterruptedMenu)
+    {
+        TryRestoreInterruptedMenu();
+    }
+    
+    ActivateUI();
+    
+    if (IsMenuActive())
+    {
+        UpdateActiveItem(encOldPosition < encNewPosition);
+    }
+    else
+    {
         if (allowRestoreInterruptedMenu)
-        {
-            TryRestoreInterruptedMenu();
-        }
-        
-        if (IsMenuActive())
-        {
-            ChangeMenuLevel(false);
-        }
-        else
         {
             ShowMenu();
         }
+        else
+        {
+            LCD_TryScrollLongText(GetEncoderPosition());
+        }
+    }
+
+    encOldPosition = encNewPosition;
+    rotaryEncoder.write(encNewPosition);
+}
+
+void UI_ForwardButtonPressed()
+{
+    ActivateUI();
+    
+    if (allowRestoreInterruptedMenu)
+    {
+        TryRestoreInterruptedMenu();
+    }
+    
+    if (IsMenuActive())
+    {
+        ChangeMenuLevel(false);
+    }
+    else
+    {
+        ShowMenu();
     }
 }
 
@@ -93,4 +109,5 @@ void UI_BackButtonPressed()
     LCD_TryExitTextScrollMode();
     
     TryRestoreInterruptedMenu();
+    ToggleRFTestMode(false);
 }
