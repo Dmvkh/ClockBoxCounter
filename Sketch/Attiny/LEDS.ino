@@ -6,6 +6,8 @@ byte led_states = 0;
 byte led_onoff_ratios[leds_total] = {10, 10, 10, 10, 10, 10};
 byte led_switch_counters[leds_total] = {0, 0, 0, 0, 0, 0};
 
+byte blinkLimit[leds_total] = {0, 0, 0, 0, 0, 0};
+
 byte rb_step = 0;
 
 long rb_millis = 0;
@@ -41,7 +43,7 @@ void DoBlinking(unsigned long currentMillis)
         }
     }
 
-    // Police blinking
+    // Other LEDs blinking
     for (byte i = 0; i < leds_total; ++i)
     {
         bool canBlink = false;
@@ -73,6 +75,19 @@ void DoBlinking(unsigned long currentMillis)
                         digitalWrite(led_pin, LOW);
 
                         led_switch_counters[i] = 0;
+
+                        // If blink times limited, then turn off LED on limit reach
+                        if (blinkLimit[i] < 255)
+                        {
+                            if (blinkLimit[i] == 0)
+                            {
+                                alerts[i] = 0;
+                            }
+                            else
+                            {
+                                blinkLimit[i]--;
+                            }
+                        }
                     }
                 }
                 else 
@@ -132,14 +147,15 @@ byte GetLedPin(byte led_no)
     return led_pin;
 }
 
-void SetBlinkMode(byte led_id, byte blinkSpeed, char darkShiftByte)
+void SetBlinkMode(byte led_id, byte blinkSpeed, char darkShiftByte, byte blink_limit)
 {    
     byte offTimesLonger = (byte)(darkShiftByte - 'A');
     
     led_onoff_ratios[led_id] = offTimesLonger;
     
     alerts[led_id] = blinkSpeed;
-
+    blinkLimit[led_id] = blink_limit;
+    
     if (led_id < 6)
     {
         // Shutdown single LED blinking

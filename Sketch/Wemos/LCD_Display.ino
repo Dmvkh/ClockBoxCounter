@@ -139,7 +139,7 @@ void LCD_WriteString(const char* text, byte xi, byte yi, bool updateLed, bool cl
     
     if (clearLineLeftover && strlen(text) < LCD_SCREEN_WIDTH)
     {
-        for (byte i = 0; i < LCD_SCREEN_WIDTH - strlen(text); ++i)
+        for (byte i = 0; i < LCD_SCREEN_WIDTH - strlen(text) - xi; ++i)
         {
             lcd.print(' ');
         }
@@ -156,7 +156,6 @@ void LCD_ClearLine(byte lineNo)
         lcd.print("                    ");
     }
 }
-
 
 void LCD_ShowWelcome()
 {

@@ -51,6 +51,7 @@ void EnterStandBy()
     OLED_Clear();
     
     ToggleMenuInterruptionRestore(true);
+    ToggleRFTestMode(false);
     
     counter_clock.setBrightnessPercent(5);
     counter_number.setBrightnessPercent(5);
@@ -222,7 +223,7 @@ void ProcessDemoStep()
         LCD_ScrollText("Lights ON");
         SetBlinking(BLINK_POLICE, 0);
         PlaySound();
-        SetLeds(true, true, true, true, true, true);
+        SetLeds(255);
     }
     else if (demo_counter == 14)
     {
@@ -391,7 +392,7 @@ void StartBlinkTest()
                 sprintf(str, "Testing mode #%i", (testNo + 1));
                 LCD_WriteString(str, 0, 2);
             
-                SetBlinking(testNo, 3, testNo * 5);
+                SetBlinking(testNo, 3, 255, testNo * 5);
             }
 
             testNo++;

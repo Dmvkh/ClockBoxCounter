@@ -1,3 +1,24 @@
+bool isTestMode = false;
+
+void ToggleRFTestMode(bool isOn)
+{
+    if (!isTestMode && isOn)
+    {
+        InterruptMenu(0);
+        
+        lcd.clear();
+        LCD_WriteString("!Testing RF signals!", 0, 0);
+        LCD_WriteString("Last received data:", 0, 1);
+    }
+    
+    if (isTestMode && !isOn)
+    {
+        TryRestoreInterruptedMenu();  
+    }
+    
+    isTestMode = isOn;
+}
+
 void SendSignal(int sendSignal)
 {
     InterruptMenu(10);
@@ -34,7 +55,7 @@ void SendSignal(int sendSignal)
 
     radioSwitch.enableReceive(D5);
 
-    SetBlinking(BLINK_WHITE, 0);;
+    SetBlinking(BLINK_WHITE, 0);
     SetBlinking(BLINK_ORANGE, 0);
         
     LCD_WriteString("Done!", 0, 3);
@@ -60,17 +81,14 @@ void ReadRadioSignal()
         
         bool isReceivedInStandBy = IsStandBy();
         
-        InterruptMenu(10);        
-        
         byte signal_data[2];
         ReadConsoleCode(radioSignal, signal_data);
-        
-        lcd.clear();            
-        LCD_WriteString("Received RF code!", 0, 0);
         
         // Unknown signal
         if (signal_data[0] == -1 || signal_data[0] > USERS_TOTAL - 1 || signal_data[1] == -1 || signal_data[1] > consoleButtons - 1)
         {
+             InterruptMenu(10);
+             
             // Don't stay awake for too long if bad signal is received in standby mode
             if (isReceivedInStandBy)
             {                
@@ -80,7 +98,10 @@ void ReadRadioSignal()
             {
                 PlaySound(BUZZER_ERROR);
             }
-                    
+            
+            lcd.clear();            
+            LCD_WriteString("Received RF code!", 0, 0);
+        
             SetBlinking(BLINK_RED, 1);
             
             OLED_PrintText("N/A");
@@ -95,28 +116,61 @@ void ReadRadioSignal()
         }
         else
         {
-            byte blinkLed = (signal_data[0] + 2) % 6;
-            SetBlinking(blinkLed, 1);
-            
-            char userName[10] = {};
-            strncpy(userName, consoleUsers[signal_data[0]], 10);
-            
-            OLED_PrintText(userName, 4, 255, 0);
+            byte blinkLed = BLINK_WHITE;//GetUserLed(signal_data[0]); 
+            bool isUserMenuActive = GetActiveUserMenuId() == signal_data[0];
 
-            char buf[LCD_SCREEN_WIDTH];
+            SetBlinking(blinkLed, 1, isUserMenuActive ? 1 : 3);
             
-            sprintf(buf, "User: %s", userName);            
-            LCD_WriteString(buf, 0, 1);
-            
-            sprintf(buf, "Button: %i", signal_data[1] + 1);            
-            LCD_WriteString(buf, 0, 2);
-            
-            delay(200);
-            SetBlinking(blinkLed, 0);
+            if (isTestMode)
+            {
+                char buf[LCD_SCREEN_WIDTH] = {};
+                sprintf(buf, "[%s]", consoleUsers[signal_data[0]]);
+                OLED_PrintText(buf, 4, 255, 0);
+
+                sprintf(buf, "User: %s", consoleUsers[signal_data[0]]);
+                LCD_WriteString(buf, 2, 2, true, true);
+                
+                sprintf(buf, "Button: %i", signal_data[1] + 1);            
+                LCD_WriteString(buf, 2, 3, true, true);
+            }
+            else
+            {
+                ActivateUI();
+                
+                if (!isUserMenuActive)
+                {
+                    delay(350);
+                    SelectMenuItem(3, 0, 2, signal_data[0]);
+                }
+                else
+                {
+                    switch (signal_data[1])
+                    {
+                        case 0:
+                        
+                            UI_ForwardButtonPressed();
+
+                            break;
+                            
+                        case 1:                            
+                        case 2:
+                        
+                            UI_Scroll(GetEncoderPosition() + (signal_data[1] == 2 ? 2 : -2));
+
+                            break;
+                            
+                        case 3:
+                        
+                            UI_BackButtonPressed();
+
+                            break;
+                    }
+                }
+            }
         }
 
         // Get some time to eliminate continuous button pressing trigger
-        delay(500);
+        delay(200);
         radioSwitch.resetAvailable();
     }
 }

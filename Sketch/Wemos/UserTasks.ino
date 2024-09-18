@@ -29,6 +29,11 @@ char refContainer[1000] = {};
 
 UserTasks user_tasks[10];
 
+byte GetUserLed(byte user_id)
+{
+    return user_leds[user_id] == 255 ? BLINK_ORANGE - user_id : user_leds[user_id];
+}
+
 void DownloadTasks()
 {
     Serial.print("begin loading tasks from API");
@@ -209,7 +214,7 @@ void UpdateTasksState(unsigned long currentMillis)
             {
                 if (setBlinks[ledBlink[i]] != blinkSpeed[i])
                 {                    
-                    SetBlinking(ledBlink[i], blinkSpeed[i], blinkShiftOnOff[i]);
+                    SetBlinking(ledBlink[i], blinkSpeed[i], 255, blinkShiftOnOff[i]);
                     setBlinks[ledBlink[i]] = blinkSpeed[i];
                 }
             }
@@ -219,7 +224,7 @@ void UpdateTasksState(unsigned long currentMillis)
             {
                 if (user_leds[i] != 255 && setBlinks[user_leds[i]] != user_speeds[i])
                 {                    
-                    SetBlinking(user_leds[i], user_speeds[i], 10);
+                    SetBlinking(user_leds[i], user_speeds[i], 255, 10);
                     setBlinks[user_leds[i]] = user_speeds[i];
                 }
             }
