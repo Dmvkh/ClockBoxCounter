@@ -116,6 +116,7 @@ void ReadRadioSignal()
         }
         else
         {
+            LedOn();
             byte blinkLed = BLINK_WHITE;//GetUserLed(signal_data[0]); 
             bool isUserMenuActive = GetActiveUserMenuId() == signal_data[0];
 

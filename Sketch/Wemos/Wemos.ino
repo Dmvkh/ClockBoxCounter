@@ -6,9 +6,9 @@
 #include <RCSwitch.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WiFi.h>
-#include <Arduino_JSON.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
+#include <ArduinoJson.h>
 
 // This file contains defines of sensitive credentials (marked with 'defined elsewhere' comment)
 #include "Credentials.h"
