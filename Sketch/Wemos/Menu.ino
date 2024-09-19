@@ -1,22 +1,21 @@
 const byte mainMenuItemsCount = 5;
-const byte menuDepth = 4;
-
 const char* MainMenuOptions[mainMenuItemsCount] = {
   "Assign RF buttons",
   "Update tasks",
-  "Show user tasks",  
+  "Show user menu",
   "Settings",
   "Stand By"
 };
 
 const char* consoleUsers[USERS_TOTAL] = { "Dad", "Mom", "Max", "Fox", };
 const byte consoleButtons = 4;
+const byte menuDepth = 5;
 
+byte selItems[menuDepth] = { 255, 255, 255, 255, 255 };
 char options[255][LCD_SCREEN_WIDTH - 2] = {};
 
 byte interruptRestoreTimeoutSecs = 30;
 
-byte selItems[menuDepth] = { 255, 255, 255, 255 };
 byte activeItem = 0;
 
 bool isMenuActive = false;
@@ -52,15 +51,18 @@ void SelectMenuItem (byte num, ...)
     va_start (arguments, num);
 
     activeItem = va_arg(arguments, int);
-    for (byte i = 1; i < num; ++i)
+    for (byte i = 1; i < menuDepth; ++i)
     {
-        selItems[i - 1] = va_arg(arguments, int);
+        selItems[i - 1] = i < num ? va_arg(arguments, int) : 255;
     }
     
     va_end (arguments);
 
     canRedrawMenu = true;
     ShowMenu();
+    
+    BrightMenuLeds();
+    UpdateMenuOLED();
 }
 
 // 0 - Unlimited interruption until manually restored
@@ -115,6 +117,9 @@ void ResetMenu()
     activeItem = 0;
     isMenuActive = false;
     canRedrawMenu = true;
+
+    BrightMenuLeds();
+    UpdateMenuOLED();
 }
 
 void UpdateActiveItem(bool increase)
@@ -187,6 +192,9 @@ void ChangeMenuLevel(bool goUp)
     {
         canRedrawMenu = true;
         ShowMenu();
+
+        BrightMenuLeds();
+        UpdateMenuOLED();
     }
 }
 
@@ -207,8 +215,9 @@ void ShowMenu()
     byte currentMenuLevel = GetCurrentMenuLevel();    
     byte levelToCheck = currentMenuLevel == 0 ? 255 : (currentMenuLevel - 1);
     
-    //Serial.printf("drawing menu L:%i S:%i OS:%i\n", levelToCheck, selItems[levelToCheck], optionsSize);
     GetSubmenuOptions(levelToCheck, selItems[levelToCheck], optionsSize);
+    
+    //Serial.printf("drawing menu L:%i S:%i OS:%i\n", levelToCheck, selItems[levelToCheck], optionsSize);
     
     if (optionsSize > 0)
     {
@@ -217,9 +226,6 @@ void ShowMenu()
   
     canRedrawMenu = false;
     isMenuActive = true;
-
-    BrightMenuLeds();
-    UpdateMenuOLED();
 }
 
 void BrightMenuLeds()
@@ -319,10 +325,15 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
         
                   break;
         
-                // Show user tasks
+                // Show user menu
                 case 2:
                   
-                  GetUserTasks(selItems[1], optionsSize, options);
+                  optionsSize = 2;
+                  strcpy(options[0], "Show user tasks");
+                  strcpy(options[1], "Activities data");
+                  
+                  counter_number.clearScreen();
+                  counter_clock.clearScreen();
         
                   break;
             }
@@ -335,11 +346,41 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
             {
                 // Show user task options
                 case 2:
-                   
-                    optionsSize = 3;
-                    strcpy(options[0], "Show description");
-                    strcpy(options[1], "Show task info");
-                    strcpy(options[2], "Accept this task!");
+
+                    switch (selectedItem)
+                    {
+                        // Show user tasks
+                        case 0:
+                          GetUserTasks(selItems[1], optionsSize, options);
+                          break;
+                    }
+                    
+                    break;
+            }
+            
+            break;
+
+        case 3:
+
+            switch (selItems[0])
+            {
+                case 2:
+                    
+                    switch (selItems[2])
+                    {
+                        // Show task menu
+                        case 0:
+                        
+                            if (selectedItem < GetUserTasks(selItems[1]))
+                            {
+                                optionsSize = 3;
+                                strcpy(options[0], "Show description");
+                                strcpy(options[1], "Show task info");
+                                strcpy(options[2], "Accept this task!");
+                            }
+
+                            break;
+                    }
                     
                     break;
             }
@@ -445,38 +486,52 @@ void ExecuteCurrentMenuItem()
       
             break;
 
-         case 3:
+         case 4:
             switch (selItems[0])
             {
                 // Show user task selected
                 case 2:
-                    const char* taskDescription;
-                    const char* taskInfo;
-                    
-                    switch (activeItem)
+
+                    switch (selItems[2])
                     {
-                        // Print task description
+                        // Selected task menu
                         case 0:
-
-                            taskDescription = GetTaskDescription(selItems[1], selItems[2]);
-        
-                            if (taskDescription != "")
+                        
+                            const char* taskDescription;
+                            const char* taskInfo;
+                            
+                            switch (activeItem)
                             {
-                                LCD_WriteScrollableText(taskDescription);
-                            }
-  
-                            break;
-
-                        // Print task info
-                        case 1:
-
-                            taskInfo = GetTaskInfo(selItems[1], selItems[2]);
+                                // Print task description
+                                case 0:
         
-                            if (taskInfo != "")
-                            {
-                                LCD_WriteScrollableText(taskInfo);
+                                    taskDescription = GetTaskDescription(selItems[1], selItems[2]);
+                
+                                    if (taskDescription != "")
+                                    {
+                                        LCD_WriteScrollableText(taskDescription);
+                                    }
+          
+                                    break;
+        
+                                // Print task info
+                                case 1:
+        
+                                    taskInfo = GetTaskInfo(selItems[1], selItems[2]);
+                
+                                    if (taskInfo != "")
+                                    {
+                                        LCD_WriteScrollableText(taskInfo);
+                                    }
+          
+                                    break;
+                                    
+                                // 
+                                case 2:
+                                    AcceptUserTask(selItems[1], selItems[2]);
+                                    break;
                             }
-  
+
                             break;
                     }
                     
