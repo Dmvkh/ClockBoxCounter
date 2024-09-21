@@ -49,6 +49,7 @@ void EnterStandBy()
 {
     Serial.println("Entering standby!");
     OLED_Clear();
+    TryRestoreInterruptedMenu();
     
     ToggleMenuInterruptionRestore(true);
     ToggleRFTestMode(false);

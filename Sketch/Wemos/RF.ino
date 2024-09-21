@@ -74,8 +74,9 @@ void ReadRadioSignal()
         long radioSignal = radioSwitch.getReceivedValue();
 
         // That could be some random noise, which should be ignored
-        if (radioSignal < 1000)
+        if (radioSignal < 1000 || radioSignal > 100000)
         {
+            radioSwitch.resetAvailable();
             return;
         }
         
@@ -138,6 +139,9 @@ void ReadRadioSignal()
             {
                 ActivateUI();
                 
+                BrightMenuLeds();
+                UpdateMenuOLED();
+    
                 if (!isUserMenuActive)
                 {
                     delay(350);
