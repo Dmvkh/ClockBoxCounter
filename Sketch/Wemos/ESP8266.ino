@@ -182,7 +182,7 @@ void CommenceAsyncUpdate()
 
         if (!IsStandBy())
         {
-          OLED_PrintText("Updating\n  clocks", 2);
+            OLED_PrintText("Updating\n  clocks", 2);
         }
         
         if (!timeClientStarted)

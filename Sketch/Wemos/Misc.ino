@@ -56,7 +56,7 @@ void EnterStandBy()
     
     counter_clock.setBrightnessPercent(5);
     counter_number.setBrightnessPercent(5);
-    
+
     counter_clock.clearScreen();
     counter_number.clearScreen();
 
@@ -174,7 +174,7 @@ void DoStartDemo()
 {
     InterruptMenu(0);
     OLED_ToggleProgress(true);
-    
+
     counter_clock.clearScreen();
     counter_number.clearScreen();
     
@@ -272,7 +272,7 @@ void ProcessDemoStep()
         
         char buf[LCD_SCREEN_WIDTH - 2] = {};        
         sprintf(buf, "Right counter #%i", (demo_counter - 24));
-        
+
         LCD_ScrollText(buf);
         counter_number.clearScreen();
         counter_number.display(8, false, false, demo_counter - 25);

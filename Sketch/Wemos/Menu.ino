@@ -63,7 +63,6 @@ void SelectMenuItem(byte num, ...)
     ShowMenu();
     
     BrightMenuLeds();
-    UpdateMenuOLED();
 }
 
 // 0 - Unlimited interruption until manually restored
@@ -121,7 +120,6 @@ void ResetMenu()
     canRedrawMenu = true;
 
     BrightMenuLeds();
-    UpdateMenuOLED();
 }
 
 void UpdateActiveItem(bool increase)
@@ -196,7 +194,6 @@ void ChangeMenuLevel(bool goUp)
         ShowMenu();
 
         BrightMenuLeds();
-        UpdateMenuOLED();
     }
 }
 
@@ -250,6 +247,8 @@ void BrightMenuLeds()
     {
         SetLeds();
     }
+    
+    UpdateMenuOLED();
 }
 
 void UpdateMenuOLED()
@@ -263,8 +262,12 @@ void UpdateMenuOLED()
         OLED_Clear();
     }
 
-    counter_clock.clearScreen();
-    counter_number.clearScreen();
+    // If not showing user menu, then clear counters
+    if (GetActiveUserMenuId() == 255)
+    {
+        counter_clock.clearScreen();
+        counter_number.clearScreen();
+    }
 }
 
 void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
@@ -343,13 +346,13 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
                   }
                   if (selItems[1] == 1)
                   {
-                      strcpy(options[1], "Weight goals");
+                      strcpy(options[1], "Personal goals");
                   }
                   if (selItems[1] > 1)
                   {
                       strcpy(options[1], "Running info");
                   }
-                  
+
                   counter_number.clearScreen();
                   counter_clock.clearScreen();
         
@@ -501,6 +504,8 @@ void ExecuteCurrentMenuItem()
                       SendSignal(signalCode);
                   }
 
+                  break;
+
                // User menu selected
                case 2:
 
@@ -512,7 +517,7 @@ void ExecuteCurrentMenuItem()
                           break;
                       
                       case 1:
-                          Serial.println("Showing weight stat info");
+                          ShowPersonalProgress(selItems[1]);
                           break;
 
                       case 2:
