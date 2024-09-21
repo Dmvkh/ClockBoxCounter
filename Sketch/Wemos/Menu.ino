@@ -28,6 +28,7 @@ void CheckMenuInterruption(long currentMillis)
 {
     if (interruptRestoreTimeoutSecs > 0 && isMenuInterrupted && IsTriggerTime(TimeWatch_MenuInterrupt, currentMillis, interruptRestoreTimeoutSecs * 1000))
     {
+        Serial.println("Restore interrupted menu by timer");
         TryRestoreInterruptedMenu();
     }
 }
@@ -42,7 +43,7 @@ byte GetActiveUserMenuId()
     return activeUserMenu;
 }
 
-void SelectMenuItem (byte num, ...)
+void SelectMenuItem(byte num, ...)
 {
     LedOn();
     TryRestoreInterruptedMenu();
@@ -70,6 +71,7 @@ void InterruptMenu(byte interruptLengthSecs)
 {
     isMenuInterrupted = true;
     interruptRestoreTimeoutSecs = interruptLengthSecs;
+    Serial.println( millis());
     UpdateTriggerTime(TimeWatch_MenuInterrupt, millis());
 }
 
@@ -260,6 +262,9 @@ void UpdateMenuOLED()
     {
         OLED_Clear();
     }
+
+    counter_clock.clearScreen();
+    counter_number.clearScreen();
 }
 
 void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
@@ -330,7 +335,20 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
                   
                   optionsSize = 2;
                   strcpy(options[0], "Show user tasks");
-                  strcpy(options[1], "Activities data");
+
+                  // Tasks vary by user
+                  if (selItems[1] == 0)
+                  {
+                      strcpy(options[1], "Funds stats");
+                  }
+                  if (selItems[1] == 1)
+                  {
+                      strcpy(options[1], "Weight goals");
+                  }
+                  if (selItems[1] > 1)
+                  {
+                      strcpy(options[1], "Running info");
+                  }
                   
                   counter_number.clearScreen();
                   counter_clock.clearScreen();
@@ -482,6 +500,28 @@ void ExecuteCurrentMenuItem()
                       int signalCode = GetConsoleCode(selItems[1], activeItem);
                       SendSignal(signalCode);
                   }
+
+               // User menu selected
+               case 2:
+
+                  // Defined by user
+                  switch (selItems[1])
+                  {
+                      case 0:
+                          Serial.println("Showing funds stat info");
+                          break;
+                      
+                      case 1:
+                          Serial.println("Showing weight stat info");
+                          break;
+
+                      case 2:
+                      case 3:
+                          ShowRunProgress(selItems[1]);
+                          break;
+                  }
+                  
+                  break;
             }
       
             break;

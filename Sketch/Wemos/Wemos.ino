@@ -60,6 +60,7 @@ enum TimeWatch
      TimeWatch_CancelBtnPress,
      TimeWatch_Demo,
      TimeWatch_TaskAlertSound,
+     TimeWatch_RunnerDataUpdate,
      WatchersCount,
 };
 
@@ -168,7 +169,9 @@ void loop() {
 
     CheckOledPrintingState(currentMillis);
   
-    ListenUIInteractions(currentMillis);
+    ListenUIInteractions(currentMillis);    
+
+    CheckMenuInterruption(currentMillis);
     
     ReadRadioSignal();
     
@@ -177,8 +180,6 @@ void loop() {
     ShowClock(currentMillis);
 
     UpdateUserTasks();
-
-    CheckMenuInterruption(currentMillis);
 
     ProcessScheduler(currentMillis);
 }

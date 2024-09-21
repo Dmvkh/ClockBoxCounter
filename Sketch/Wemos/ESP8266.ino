@@ -179,7 +179,11 @@ void CommenceAsyncUpdate()
     if (updateInit && wStatus == WL_CONNECTED)
     {        
         Serial.println("WI-FI Connected!");
-        OLED_PrintText("Updating\n  clocks", 2);
+
+        if (!IsStandBy())
+        {
+          OLED_PrintText("Updating\n  clocks", 2);
+        }
         
         if (!timeClientStarted)
         {
@@ -262,6 +266,13 @@ bool PostData(const char* apiUrl, JsonDocument& postJSON, const char* messageOnS
 
 JsonDocument GetJson(const char* apiUrl, byte num, ...)
 {
+    bool isWConnected = WiFi.status() == WL_CONNECTED;
+    
+    if (!isWConnected)
+    {
+        isWConnected = TryBeginAndWaitWifiConnect(20);
+    }
+    
     JsonDocument doc;
 
     const int max_url_len = 500;
@@ -304,13 +315,14 @@ JsonDocument GetJson(const char* apiUrl, byte num, ...)
         if (httpCode == HTTP_CODE_OK) 
         {
             // HTTP header has been send and Server response header has been handled
-            Serial.printf("code: %d ", httpCode);
+            Serial.printf("code: %d\n", httpCode);
 
             DeserializationError error = deserializeJson(doc, http.getString());
             if (error)
             {
               Serial.print(F("deserializeJson() failed: "));
               Serial.println(error.f_str());
+              //Serial.println(http.getString());
             }
         }
         else 
@@ -323,6 +335,11 @@ JsonDocument GetJson(const char* apiUrl, byte num, ...)
     else 
     {
         Serial.println("[HTTP] Unable to connect");
+    }
+
+    if (!isWConnected)
+    {
+        FinishConnectingToWiFi(millis(), isWConnected);
     }
 
     return doc;
