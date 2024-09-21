@@ -140,7 +140,6 @@ void ReadRadioSignal()
                 ActivateUI();
                 
                 BrightMenuLeds();
-                UpdateMenuOLED();
     
                 if (!isUserMenuActive)
                 {
@@ -167,6 +166,11 @@ void ReadRadioSignal()
                         case 3:
                         
                             UI_BackButtonPressed();
+
+                            if (GetCurrentMenuLevel() == 1)
+                            {
+                                EnterStandBy();
+                            }
 
                             break;
                     }

@@ -179,9 +179,8 @@ void DownloadTasks()
     {
         Serial.println("No active tasks have been found.");
         
-        // Turn blinking off
-        SetLeds();
-        counter_number.clearScreen();
+        // Turn blinking off if no user menu active
+        BrightMenuLeds();
     }
 }
 

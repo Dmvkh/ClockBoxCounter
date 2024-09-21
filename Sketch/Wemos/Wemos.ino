@@ -60,7 +60,7 @@ enum TimeWatch
      TimeWatch_CancelBtnPress,
      TimeWatch_Demo,
      TimeWatch_TaskAlertSound,
-     TimeWatch_RunnerDataUpdate,
+     TimeWatch_ActivityDataUpdate,
      WatchersCount,
 };
 
