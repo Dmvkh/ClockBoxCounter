@@ -70,7 +70,7 @@ void InterruptMenu(byte interruptLengthSecs)
 {
     isMenuInterrupted = true;
     interruptRestoreTimeoutSecs = interruptLengthSecs;
-    Serial.println( millis());
+
     UpdateTriggerTime(TimeWatch_MenuInterrupt, millis());
 }
 
@@ -336,7 +336,7 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
                 // Show user menu
                 case 2:
                   
-                  optionsSize = 2;
+                  optionsSize = 3;
                   strcpy(options[0], "Show user tasks");
 
                   // Tasks vary by user
@@ -352,6 +352,8 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
                   {
                       strcpy(options[1], "Running info");
                   }
+
+                  strcpy(options[2], "Accepted tasks");
 
                   counter_number.clearScreen();
                   counter_clock.clearScreen();
@@ -372,7 +374,12 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
                     {
                         // Show user tasks
                         case 0:
-                          GetUserTasks(selItems[1], optionsSize, options);
+                          GetUserTasksList(selItems[1], optionsSize, true, options);
+                          break;
+
+                        // Show accepted user tasks
+                        case 2:
+                          GetUserTasksList(selItems[1], optionsSize, false, options);
                           break;
                     }
                     
@@ -389,15 +396,16 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
                     
                     switch (selItems[2])
                     {
-                        // Show task menu
+                        // Show active tasks menu
                         case 0:
-                        
-                            if (selectedItem < GetUserTasks(selItems[1]))
+                        // Show acepted tasks menu
+                        case 2:
+                            if (selectedItem < GetUserTasksCount(selItems[1], selItems[2] == 0))
                             {
                                 optionsSize = 3;
                                 strcpy(options[0], "Show description");
                                 strcpy(options[1], "Show task info");
-                                strcpy(options[2], "Accept this task!");
+                                strcpy(options[2], selItems[2] == 0 ? "Accept this task!" : "Cancel accepted");
                             }
 
                             break;
@@ -513,7 +521,7 @@ void ExecuteCurrentMenuItem()
                   switch (selItems[1])
                   {
                       case 0:
-                          Serial.println("Showing funds stat info");
+                          ShowFundsProgress(selItems[1]);
                           break;
                       
                       case 1:
@@ -539,8 +547,10 @@ void ExecuteCurrentMenuItem()
 
                     switch (selItems[2])
                     {
-                        // Selected task menu
+                        // Selected active task menu
                         case 0:
+                        // Selected accepted task menu
+                        case 2:
                         
                             const char* taskDescription;
                             const char* taskInfo;
@@ -550,7 +560,7 @@ void ExecuteCurrentMenuItem()
                                 // Print task description
                                 case 0:
         
-                                    taskDescription = GetTaskDescription(selItems[1], selItems[2]);
+                                    taskDescription = GetTaskDescription(selItems[1], selItems[3], selItems[2] == 0);
                 
                                     if (taskDescription != "")
                                     {
@@ -562,7 +572,7 @@ void ExecuteCurrentMenuItem()
                                 // Print task info
                                 case 1:
         
-                                    taskInfo = GetTaskInfo(selItems[1], selItems[2]);
+                                    taskInfo = GetTaskInfo(selItems[1], selItems[3], selItems[2] == 0);
                 
                                     if (taskInfo != "")
                                     {
@@ -573,7 +583,7 @@ void ExecuteCurrentMenuItem()
                                     
                                 // 
                                 case 2:
-                                    AcceptUserTask(selItems[1], selItems[2]);
+                                    ChangeUserTaskState(selItems[1], selItems[3], selItems[2] == 0);
                                     break;
                             }
 

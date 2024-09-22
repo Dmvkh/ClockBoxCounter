@@ -19,7 +19,7 @@ byte ledBlink[maxTasks];
 byte blinkSpeed[maxTasks];
 byte blinkShiftOnOff[maxTasks]; // 0-9 longer 'on', 10 - even, > 10 longer 'off'
 
-byte currentTasks = 0;
+byte allTasks = 0;
 byte displayingTasks = 0;
 byte taskSoundAlert = 0;
 
@@ -34,13 +34,14 @@ byte GetUserLed(byte user_id)
     return user_leds[user_id] == 255 ? BLINK_ORANGE - user_id : user_leds[user_id];
 }
 
-byte GetUserTasks(byte user_id)
+byte GetUserTasksCount(byte user_id, bool isActive)
 {
     byte userTasksCount = 0;
 
-    for (byte i = 0; i < currentTasks; ++i)
+    for (byte i = 0; i < allTasks; ++i)
     {
-        if (user_tasks[i].USER_ID == 255 || user_tasks[i].USER_ID == user_id)
+        if (((isActive && user_tasks[i].USER_ID == 255) || user_tasks[i].USER_ID == user_id) && 
+            ((isActive && user_tasks[i].PRIORITY_LEVEL > 0) || (!isActive && user_tasks[i].PRIORITY_LEVEL == 0)))
         {    
             ++userTasksCount;
         }
@@ -66,9 +67,9 @@ void DownloadTasks()
       
         Serial.printf("JSON received! %i tasks downloaded.\n", tasks_list["all_tasks"].size());
         
-        currentTasks = tasks_list["all_tasks"].size();
+        allTasks = tasks_list["all_tasks"].size();
 
-        for (byte i = 0; i < min((byte)255, currentTasks); ++i)
+        for (byte i = 0; i < min((byte)255, allTasks); ++i)
         {
             UserTasks newClass;
             
@@ -97,7 +98,7 @@ void DownloadTasks()
             newClass.USER_ID = tasks_list["all_tasks"][i]["USER_ID"].isNull() ? 255 : ((byte)tasks_list["all_tasks"][i]["USER_ID"] - 1);
             newClass.PRIORITY_LEVEL = (byte)tasks_list["all_tasks"][i]["PRIORITY_LEVEL"];
             newClass.REC_NO = (byte)tasks_list["all_tasks"][i]["REC_NO"];
-            
+
             // Activate LED for designated users
             if (newClass.USER_ID != 255 && newClass.PRIORITY_LEVEL < 4 && newClass.USER_ID < USERS_TOTAL)
             {
@@ -153,9 +154,9 @@ void DownloadTasks()
         Serial.println("Failed to receive JSON!");
     }
 
-    if (currentTasks > 0)
+    if (allTasks > 0)
     {
-        Serial.printf("Downloaded %i tasks.", currentTasks);
+        Serial.printf("Downloaded %i tasks.", allTasks);
 
         byte urgents = 0;
         for (byte i = 0; i < maxTasks; ++i)
@@ -191,15 +192,24 @@ void ResetTasksSignals()
     SetLeds();
 }
 
-void UpdateTasksState(unsigned long currentMillis)
+void UpdateTasksState(unsigned long currentMillis, bool forceTaskStateUpdate)
 {  
     // When in standby mode - update tasks blinking
     if (IsStandBy())
-    {        
-        if (currentTasks > 0)
+    {   
+        byte activeTasks = 0;
+        for (byte i = 0; i < allTasks; ++i)
+        {
+            if (user_tasks[i].PRIORITY_LEVEL > 0)
+            {
+                activeTasks++;  
+            }
+        }    
+        
+        if (activeTasks > 0 || forceTaskStateUpdate)
         {
             // Set blinking for tasks. Blinkings are set only for maxTasks first tasks
-            for (byte i = 0; i < min(currentTasks, maxTasks); ++i)
+            for (byte i = 0; i < min(allTasks, maxTasks); ++i)
             {
                 if (setBlinks[ledBlink[i]] != blinkSpeed[i])
                 {
@@ -219,11 +229,11 @@ void UpdateTasksState(unsigned long currentMillis)
                 }
             }
 
-            // Show current tasks count on number counter
-            if (displayingTasks != currentTasks)
+            // Show current tasks count on number counter            
+            if (displayingTasks != activeTasks)
             {
-                counter_number.display(currentTasks, false, false, currentTasks > 9 ? 2 : 3);
-                displayingTasks = currentTasks;
+                counter_number.display(activeTasks, false, false, activeTasks > 9 ? 2 : 3);
+                displayingTasks = activeTasks;
             }
 
             byte soundInterval = taskSoundAlert == 1 ? 10 : (taskSoundAlert == 2 ? 5 : 30);
@@ -251,46 +261,57 @@ void UpdateTasksState(unsigned long currentMillis)
     }
 }
 
-void AcceptUserTask(byte user_id, byte taskNo)
+void ChangeUserTaskState(byte user_id, byte taskNo, bool acceptTask)
 {
-    byte task_id = GetTaskAbsPos(user_id, taskNo);    
+    byte task_id = GetTaskAbsPos(user_id, taskNo, acceptTask);    
     InterruptMenu(0);
-    
+
     lcd.clear();
     
-    LCD_WriteString("Accepting task...", 0, 0);
+    LCD_WriteString(acceptTask ? "Accepting task..." : "Cancelling task...", 0, 0);
     
     JsonDocument taskJson;
     taskJson["REC_NO"] = user_tasks[task_id].REC_NO;
-    taskJson["USER_ID"] = user_id + 1;
-    taskJson["PRIORITY_LEVEL"] = 0;
 
-    if (!PostData(WEB_SERVICE_GET_TASKS_API, taskJson, "Task accepted!"))
+    if (acceptTask)
     {
-        LCD_WriteString("Accept failed!", 3, 5);
+        taskJson["USER_ID"] = user_id + 1;
+    }
+    else
+    {
+        taskJson["USER_ID"] = "null";
+    }
+    
+    taskJson["PRIORITY_LEVEL"] = acceptTask ? 0 : 1;
+
+    if (!PostData(WEB_SERVICE_GET_TASKS_API, taskJson, acceptTask ? "Task accepted!" : "Task cancelled!"))
+    {
+        LCD_WriteString(acceptTask ? "Accept failed!" : "Cancellation failed!", 3, 5);
     }
     
     SelectMenuItem(4, 0, 2, user_id, 0);
     InterruptMenu(3);
 }
 
-void GetUserTasks(byte user_id, byte& optionsSize, char options[255][LCD_SCREEN_WIDTH - 2])
+void GetUserTasksList(byte user_id, byte& optionsSize, bool listActiveTasks, char options[255][LCD_SCREEN_WIDTH - 2])
 {
     optionsSize = 0;
     
-    //Serial.printf("Loading tasks for user %i\n", user_id);    
-    if (currentTasks > 0)
+    //Serial.printf("Loading tasks for user %i\n", user_id); 
+
+    if (allTasks > 0)
     {
-        for (byte i = 0; i < currentTasks; ++i)
+        for (byte i = 0; i < allTasks; ++i)
         {
-            if (user_tasks[i].USER_ID == 255 || user_tasks[i].USER_ID == user_id)
+            if (((listActiveTasks && user_tasks[i].USER_ID == 255) || user_tasks[i].USER_ID == user_id) &&
+                ((listActiveTasks && user_tasks[i].PRIORITY_LEVEL > 0) || (!listActiveTasks && user_tasks[i].PRIORITY_LEVEL == 0)))
             { 
                 char uChar = user_tasks[i].USER_ID == 255 ? '?' : '+';
                 
                 snprintf(options[optionsSize], LCD_SCREEN_WIDTH - 2, "[%c] Task #%i [%c]", 
                   uChar,
                   (optionsSize + 1), 
-                  user_tasks[optionsSize].PRIORITY_LEVEL == 1 ? 'D' : user_tasks[optionsSize].PRIORITY_LEVEL == 2 ? 'B' : user_tasks[optionsSize].PRIORITY_LEVEL == 3 ? 'A' : 'S');
+                  user_tasks[i].PRIORITY_LEVEL == 1 ? 'D' : user_tasks[i].PRIORITY_LEVEL == 2 ? 'B' : user_tasks[i].PRIORITY_LEVEL == 3 ? 'A' : 'S');
                 
                 optionsSize++;
             }
@@ -300,25 +321,26 @@ void GetUserTasks(byte user_id, byte& optionsSize, char options[255][LCD_SCREEN_
     if (optionsSize == 0)
     {
         optionsSize = 1;
-        strcpy(options[0], "No current tasks.");
+        strcpy(options[0], listActiveTasks ? "No current tasks." : "No accepted tasks.");
         counter_number.clearScreen();
     }
     else
     {
-        counter_number.display(optionsSize, false, false, currentTasks > 9 ? 2 : 3);
+        counter_number.display(optionsSize, false, false, allTasks > 9 ? 2 : 3);
     }
 }
 
-byte GetTaskAbsPos(byte user_id, byte userTaskNo)
+byte GetTaskAbsPos(byte user_id, byte userTaskNo, bool isActive)
 {
     byte taskCnt = 0;
-    for (byte i = 0; i < currentTasks; ++i)
+    for (byte i = 0; i < allTasks; ++i)
     {
-        if (user_tasks[i].USER_ID == 255 || user_tasks[i].USER_ID == user_id)
-        {             
+        if (((isActive && user_tasks[i].USER_ID == 255) || user_tasks[i].USER_ID == user_id) && 
+        ((isActive && user_tasks[i].PRIORITY_LEVEL > 0) || (!isActive && user_tasks[i].PRIORITY_LEVEL == 0)))
+        { 
             if (userTaskNo == taskCnt)
-            {
-                return taskCnt;
+            {              
+                return i;
             }
             
             taskCnt++;
@@ -328,10 +350,10 @@ byte GetTaskAbsPos(byte user_id, byte userTaskNo)
     return 255;
 }
 
-const char* GetTaskDescription(byte user_id, byte taskNo)
+const char* GetTaskDescription(byte user_id, byte taskNo, bool isActiveTask)
 {
-    byte taskCnt = GetTaskAbsPos(user_id, taskNo);
-    
+    byte taskCnt = GetTaskAbsPos(user_id, taskNo, isActiveTask);
+
     if (taskCnt < 255)
     {
         return user_tasks[taskCnt].DESCRIPTION;
@@ -340,9 +362,9 @@ const char* GetTaskDescription(byte user_id, byte taskNo)
     return "";
 }
 
-const char* GetTaskInfo(byte user_id, byte taskNo)
+const char* GetTaskInfo(byte user_id, byte taskNo, bool isActiveTask)
 {
-    byte taskCnt = GetTaskAbsPos(user_id, taskNo);
+    byte taskCnt = GetTaskAbsPos(user_id, taskNo, isActiveTask);
 
     if (taskCnt < 255)
     {

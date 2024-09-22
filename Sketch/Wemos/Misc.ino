@@ -63,6 +63,8 @@ void EnterStandBy()
     DeactivateMenu();
     LCD_ShowWelcome();
 
+    UpdateTasksState(millis(), true);
+    
     lcd.noBacklight();
     isStandBy = true;
 }
