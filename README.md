@@ -146,10 +146,10 @@ Push-up buttons, ultra-bright 3mm LEDs, breadboard, electronic components (diode
    - [x] Add new tasks counter indicator in Standby mode
    - [x] Add task signals manifestatation (blinking/sounds) in Standby mode
    - [x] Add new tasks download from Web-server API
-- [ ] Implement RF 433 MHz protocol communication **IN PROGRESS**
+- [x] Implement RF 433 MHz protocol communication
   - [x] Add RF reading for detecting users and distinguish remote buttons pressed
   - [x] Add generating and transmitting RF signal for choosen user via Menu for remote programming
-  - [ ] Add interaction with downloaded tasks via RF remote **TODO**
+  - [x] Add interaction with downloaded tasks via RF remote
 
 #### - LAN web server API
 - [x] Add Web-Server API for individual user tasks
