@@ -99,14 +99,14 @@ void ShowPersonalProgress(byte user_id)
             ClearBuff();
             Serial.println("Personal data JSON received!");
             
-            snprintf(lcd_buf[0], 20, "Stats of %s", consoleUsers[user_id]);
+            snprintf(lcd_buf[0], LCD_SCREEN_WIDTH, "Stats of %s", consoleUsers[user_id]);
 
             byte wg = (float)run_json["counters"][2];
             
-            snprintf(lcd_buf[1], 20, "Weight goal: %i", wg);            
+            snprintf(lcd_buf[1], LCD_SCREEN_WIDTH, "Weight goal: %i", wg);            
 
             c1_val = (int)run_json["counters"][0];
-            c2_fval = (int)run_json["counters"][1];
+            c2_fval = (float)run_json["counters"][1];
 
             canShowStats = true;
             activity_id = user_id;
@@ -116,7 +116,67 @@ void ShowPersonalProgress(byte user_id)
         }
         else
         {
-            Serial.println("Running data retreivement failed!");
+            Serial.println("Stats data retreivement failed!");
+            OLED_PrintText("ERROR");
+            
+            LCD_WriteString("  Timed out. Retry!", 0, 3, true, true);
+            InterruptMenu(3); 
+        }
+    }
+
+    if (canShowStats)
+    {
+        LCD_WriteString(lcd_buf[0], 0, 0, true, true);
+        LCD_WriteString(lcd_buf[1], 0, 1, true, true);
+        LCD_WriteString(lcd_buf[2], 0, 2, true, true);
+        LCD_WriteString(lcd_buf[3], 0, 3, true, true);
+
+        counter_clock.display(c1_val);
+        counter_number.display(c2_fval);
+    }
+}
+
+
+void ShowFundsProgress(byte user_id)
+{
+    InterruptMenu(40); 
+    
+    lcd.clear();
+    LCD_WriteString("Checking Funds.", 0, 0);    
+
+    bool canShowStats = activity_id == user_id || IsTriggerTime(TimeWatch_ActivityDataUpdate, millis(), activiy_data_update_interval * 1000);
+    if (!canShowStats)
+    {    
+        Serial.println("Scrapping user data from server API.");
+        
+        // WEB_SERVICE_PERSONAL_DATA_API defined elsewhere
+        char buf[20] = {};
+        sprintf(buf, "%i", user_id + 1);
+        JsonDocument run_json = GetJson(WEB_SERVICE_PERSONAL_DATA_API, 0);
+      
+        if (!run_json.isNull() && !run_json["total"].isNull())
+        {
+            ClearBuff();
+            Serial.println("Funds data JSON received!");
+            
+            strncpy(lcd_buf[0], "Funds collected:", LCD_SCREEN_WIDTH);
+
+            byte wg = (float)run_json["counters"][2];
+            
+            snprintf(lcd_buf[1], LCD_SCREEN_WIDTH + 1, "$ per month: %f.5", (float)run_json["dpm"]);
+
+            c1_val = (int)run_json["goal"] / 1000;
+            c2_fval = (float)run_json["total"] / 1000;
+
+            canShowStats = true;
+            activity_id = user_id;
+
+            snprintf(lcd_buf[2], LCD_SCREEN_WIDTH + 1, "$ Goal");
+            snprintf(lcd_buf[3], LCD_SCREEN_WIDTH + 1, "v            Total v");
+        }
+        else
+        {
+            Serial.println("Funds data retreivement failed!");
             OLED_PrintText("ERROR");
             
             LCD_WriteString("  Timed out. Retry!", 0, 3, true, true);

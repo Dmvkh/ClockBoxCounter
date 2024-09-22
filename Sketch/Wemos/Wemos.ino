@@ -99,7 +99,8 @@ void LCD_ScrollText(const char* text, bool continueScroll = true);
 void SetBlinking(byte blink_mode, int blinkSpeed, byte blinkLimit = 255,  byte offTimesLonger = 10);
 
 void DrawMenuOptions(byte optionsSize, char options[255][LCD_SCREEN_WIDTH - 2], byte activeItem);
-void GetUserTasks(byte user_id, byte& optionsSize, char options[255][LCD_SCREEN_WIDTH - 2]);
+void GetUserTasksList(byte user_id, byte& optionsSize, bool listActiveTasks, char options[255][LCD_SCREEN_WIDTH - 2]);
+void UpdateTasksState(unsigned long currentMillis, bool forceTaskStateUpdate = false);
 
 void setup() {
   
