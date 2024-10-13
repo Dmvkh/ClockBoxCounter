@@ -263,9 +263,9 @@ void UpdateMenuOLED()
     }
 
     // If not showing user menu, then clear counters
-    if (GetActiveUserMenuId() == 255)
-    {
-        counter_clock.clearScreen();
+    if (GetActiveUserMenuId() == 255 && !IsStandBy())
+    {        
+        counter_clock.clearScreen();       
         counter_number.clearScreen();
     }
 }
@@ -336,7 +336,7 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
                 // Show user menu
                 case 2:
                   
-                  optionsSize = 3;
+                  optionsSize = 4;
                   strcpy(options[0], "Show user tasks");
 
                   // Tasks vary by user
@@ -354,6 +354,8 @@ void GetSubmenuOptions(byte menuLevel, byte selectedItem, byte& optionsSize)
                   }
 
                   strcpy(options[2], "Accepted tasks");
+
+                  strcpy(options[3], "Allowance balance");
 
                   counter_number.clearScreen();
                   counter_clock.clearScreen();
@@ -516,21 +518,32 @@ void ExecuteCurrentMenuItem()
 
                // User menu selected
                case 2:
-
-                  // Defined by user
-                  switch (selItems[1])
+               
+                  switch (activeItem)
                   {
-                      case 0:
-                          ShowFundsProgress(selItems[1]);
-                          break;
-                      
-                      case 1:
-                          ShowPersonalProgress(selItems[1]);
+                      // Allowance balance selected
+                      case 3:
+                          ShowAllowanceBalance(selItems[1]);
                           break;
 
-                      case 2:
-                      case 3:
-                          ShowRunProgress(selItems[1]);
+                      default:
+                          // Defined by user
+                          switch (selItems[1])
+                          {
+                              case 0:
+                                  ShowFundsProgress(selItems[1]);
+                                  break;
+                              
+                              case 1:
+                                  ShowPersonalProgress(selItems[1]);
+                                  break;
+        
+                              case 2:
+                              case 3:
+                                  ShowRunProgress(selItems[1]);
+                                  break;
+                          }
+                          
                           break;
                   }
                   

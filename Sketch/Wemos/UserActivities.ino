@@ -152,7 +152,7 @@ void ShowFundsProgress(byte user_id)
         // WEB_SERVICE_PERSONAL_DATA_API defined elsewhere
         char buf[20] = {};
         sprintf(buf, "%i", user_id + 1);
-        JsonDocument run_json = GetJson(WEB_SERVICE_PERSONAL_DATA_API, 0);
+        JsonDocument run_json = GetJson(WEB_SERVICE_FUNDS_API, 0);
       
         if (!run_json.isNull() && !run_json["total"].isNull())
         {
@@ -160,8 +160,6 @@ void ShowFundsProgress(byte user_id)
             Serial.println("Funds data JSON received!");
             
             strncpy(lcd_buf[0], "Funds collected:", LCD_SCREEN_WIDTH);
-
-            byte wg = (float)run_json["counters"][2];
             
             snprintf(lcd_buf[1], LCD_SCREEN_WIDTH + 1, "$ per month: %f.5", (float)run_json["dpm"]);
 
@@ -193,5 +191,59 @@ void ShowFundsProgress(byte user_id)
 
         counter_clock.display(c1_val);
         counter_number.display(c2_fval);
+    }
+}
+
+void ShowAllowanceBalance(byte user_id)
+{
+    InterruptMenu(40); 
+    
+    lcd.clear();
+    LCD_WriteString("Checking Balance.", 0, 0);    
+    const byte act_id_shift = 10;
+
+    bool canShowStats = activity_id == user_id + act_id_shift || IsTriggerTime(TimeWatch_ActivityDataUpdate, millis(), activiy_data_update_interval * 1000);
+    
+    if (!canShowStats)
+    {    
+        Serial.println("Scrapping user data from server API.");
+        
+        // WEB_SERVICE_ALLOWANCE_API defined elsewhere
+        char buf[20] = {};
+        sprintf(buf, "%i", user_id + 1);
+        JsonDocument run_json = GetJson(WEB_SERVICE_ALLOWANCE_API, 1, "user_id", buf);
+
+        if (!run_json.isNull() && !run_json["balance"].isNull())
+        {
+            ClearBuff();
+            Serial.println("Allowance data JSON received!");
+            
+            strncpy(lcd_buf[0], "Allowance balance:", LCD_SCREEN_WIDTH);
+            
+            snprintf(lcd_buf[1], LCD_SCREEN_WIDTH + 1, "$ %i", (int)run_json["balance"]);
+
+            c1_val = 0;
+            c2_val = (int)run_json["balance"];
+
+            canShowStats = true;
+            activity_id = user_id + act_id_shift;
+        }
+        else
+        {
+            Serial.println("Allowance data retreivement failed!");
+            OLED_PrintText("ERROR");
+            
+            LCD_WriteString("  Timed out. Retry!", 0, 3, true, true);
+            InterruptMenu(3); 
+        }
+    }
+
+    if (canShowStats)
+    {
+        LCD_WriteString(lcd_buf[0], 0, 0, true, true);
+        LCD_WriteString(lcd_buf[1], 0, 1, true, true);
+
+        counter_clock.clearScreen();
+        counter_number.display(c2_val);
     }
 }
